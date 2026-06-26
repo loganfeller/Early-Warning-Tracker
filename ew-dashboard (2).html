@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Early Warning Indicators — G7</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #f8f8f7; --surface: #ffffff; --surface2: #f2f1ef;
+    --border: rgba(0,0,0,0.09); --border-strong: rgba(0,0,0,0.16);
+    --text: #0b0b0b; --text-2: #52514e; --text-3: #898781;
+    --radius: 8px; --ok: #1baf7a; --warn: #c98500; --danger: #d03b3b;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #111110; --surface: #1c1c1a; --surface2: #242422;
+      --border: rgba(255,255,255,0.08); --border-strong: rgba(255,255,255,0.14);
+      --text: #f0efe8; --text-2: #c3c2b7; --text-3: #898781;
+    }
+  }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-size: 14px; line-height: 1.5; }
+  .page { max-width: 900px; margin: 0 auto; padding: 2rem 1.25rem 4rem; }
+  .page-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 2rem; padding-bottom: 1.25rem; border-bottom: 0.5px solid var(--border-strong); gap: 1rem; flex-wrap: wrap; }
+  .page-header h1 { font-size: 18px; font-weight: 500; }
+  .page-header p { font-size: 12px; color: var(--text-3); margin-top: 3px; }
+  .btn { font-size: 12px; font-weight: 500; padding: 6px 14px; border-radius: var(--radius); border: 0.5px solid var(--border-strong); background: var(--surface); color: var(--text-2); cursor: pointer; display: flex; align-items: center; gap: 5px; white-space: nowrap; }
+  .btn:hover { background: var(--surface2); }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .tabs { display: flex; gap: 4px; margin-bottom: 1.5rem; flex-wrap: wrap; }
+  .tab { font-size: 12px; font-weight: 500; padding: 5px 13px; border-radius: var(--radius); border: 0.5px solid var(--border); background: none; color: var(--text-3); cursor: pointer; }
+  .tab:hover { background: var(--surface); color: var(--text); }
+  .tab.active { background: #dbeafe; border-color: #93c5fd; color: #1d4ed8; }
+  @media (prefers-color-scheme: dark) { .tab.active { background: #1e3a5f; border-color: #2563eb; color: #93c5fd; } }
+  .alerts { margin-bottom: 1.25rem; }
+  .alert { border-radius: var(--radius); padding: 8px 12px; font-size: 12px; margin-bottom: 6px; display: flex; align-items: flex-start; gap: 7px; line-height: 1.4; }
+  .alert.warn  { background: #fef9ec; border: 0.5px solid #fbbf24; color: #92400e; }
+  .alert.danger { background: #fef2f2; border: 0.5px solid #fca5a5; color: #991b1b; }
+  @media (prefers-color-scheme: dark) {
+    .alert.warn  { background: #2d2000; border-color: #854d0e; color: #fde68a; }
+    .alert.danger { background: #2d0a0a; border-color: #7f1d1d; color: #fca5a5; }
+  }
+  .metric-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-bottom: 1rem; }
+  .metric-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: 12px; padding: 16px 18px; }
+  .metric-card .lbl { font-size: 10px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-3); margin-bottom: 8px; }
+  .metric-card .val { font-size: 28px; font-weight: 500; font-variant-numeric: tabular-nums; line-height: 1; color: var(--text); }
+  .metric-card .val.ok     { color: var(--ok); }
+  .metric-card .val.warn   { color: var(--warn); }
+  .metric-card .val.danger { color: var(--danger); }
+  .metric-card .sub { font-size: 11px; color: var(--text-3); margin-top: 5px; }
+  .metric-card .per { font-size: 10px; color: var(--text-3); margin-top: 10px; padding-top: 8px; border-top: 0.5px solid var(--border); }
+  .chart-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: 12px; padding: 16px 18px; margin-bottom: 10px; }
+  .chart-card .clabel { font-size: 12px; font-weight: 500; color: var(--text-2); margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+  .chart-card .clabel span { font-size: 11px; font-weight: 400; color: var(--text-3); }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  @media (max-width: 540px) { .two-col { grid-template-columns: 1fr; } }
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 1.25rem; font-size: 11px; color: var(--text-3); }
+  .legend span { display: flex; align-items: center; gap: 5px; }
+  .swatch { width: 22px; height: 3px; border-radius: 2px; display: inline-block; }
+  .status-bar { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 1.5rem; padding-top: 1rem; border-top: 0.5px solid var(--border); font-size: 11px; color: var(--text-3); align-items: center; }
+  .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 4px; }
+  .dot.ok { background: var(--ok); } .dot.err { background: var(--danger); } .dot.pending { background: var(--text-3); }
+  .msg { text-align: center; padding: 3rem 0; color: var(--text-3); font-size: 13px; }
+  .error-box { background: var(--surface); border: 0.5px solid var(--border); border-radius: 12px; padding: 20px; font-size: 13px; color: var(--text-2); }
+  .error-box strong { display: block; margin-bottom: 6px; color: var(--text); }
+  .thresholds { font-size: 11px; color: var(--text-3); background: var(--surface2); border-radius: var(--radius); padding: 8px 12px; margin-bottom: 1.25rem; line-height: 1.6; }
+  .thresholds b { color: var(--text-2); }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="page-header">
+    <div>
+      <h1>Early Warning Indicators</h1>
+      <p>G7 economies &middot; Credit gaps &middot; Debt service ratios &middot; Yield curve &middot; House prices</p>
+    </div>
+    <button class="btn" id="rbtn" onclick="loadAll()">&#8635; Refresh</button>
+  </div>
+  <div class="tabs" id="tabs"></div>
+  <div class="thresholds">
+    <b>Alert thresholds (BIS research):</b>
+    Credit-to-GDP gap &gt;2pp = caution &middot; &gt;10pp = crisis-level &middot;
+    DSR &gt;18% = elevated &middot; &gt;25% = high risk &middot;
+    Yield curve &lt;0% = inversion signal &middot;
+    House prices &gt;7% yr/yr = elevated
+  </div>
+  <div class="legend">
+    <span><span class="swatch" style="background:var(--ok)"></span>within normal range</span>
+    <span><span class="swatch" style="background:var(--warn)"></span>elevated — caution</span>
+    <span><span class="swatch" style="background:var(--danger)"></span>above crisis threshold</span>
+  </div>
+  <div class="alerts" id="alerts"></div>
+  <div id="content"><div class="msg">Fetching data&hellip;</div></div>
+  <div class="status-bar">
+    <div><span class="dot pending" id="dot-bis"></span><span id="lbl-bis">BIS &mdash; waiting</span></div>
+    <div><span class="dot pending" id="dot-fred"></span><span id="lbl-fred">FRED &mdash; waiting</span></div>
+    <div id="lbl-time"></div>
+  </div>
+</div>
+
+<script>
+const FRED_KEY = 'a14f8c0f79b27d486d3b7b9cb5b4b04a';
+
+const COUNTRIES = [
+  { code:'US', name:'United States',  bis:'US', fredYC:'T10Y2Y',          fredHP:'QUSN628BIS',  ycLabel:'10yr\u22122yr spread' },
+  { code:'CA', name:'Canada',         bis:'CA', fredYC:'IRLTLT01CAM156N', fredHP:'QCAN628BIS',  ycLabel:'10yr gov bond' },
+  { code:'JP', name:'Japan',          bis:'JP', fredYC:'IRLTLT01JPM156N', fredHP:'QJPN628BIS',  ycLabel:'10yr gov bond' },
+  { code:'DE', name:'Germany',        bis:'DE', fredYC:'IRLTLT01DEM156N', fredHP:'QDER628BIS',  ycLabel:'10yr gov bond' },
+  { code:'FR', name:'France',         bis:'FR', fredYC:'IRLTLT01FRM156N', fredHP:'QFRR628BIS',  ycLabel:'10yr gov bond' },
+  { code:'IT', name:'Italy',          bis:'IT', fredYC:'IRLTLT01ITM156N', fredHP:'QITR628BIS',  ycLabel:'10yr gov bond' },
+  { code:'GB', name:'United Kingdom', bis:'GB', fredYC:'IRLTLT01GBM156N', fredHP:'QGBR628BIS',  ycLabel:'10yr gov bond' },
+];
+
+let active = 'US';
+let cache  = {};
+let charts = {};
+
+// BIS API v2 — correct full dataflow URL
+async function getBIS(dataset, version, key, n = 24) {
+  const url = `https://stats.bis.org/api/v2/data/dataflow/BIS/${dataset}/${version}/${key}?format=csv&lastNObservations=${n}`;
+  const r = await fetch(url);
+  if (!r.ok) throw new Error(`BIS ${r.status}: ${url}`);
+  return parseBIScsv(await r.text());
+}
+
+function parseBIScsv(text) {
+  const lines = text.trim().split('\n').filter(l => l.trim());
+  if (lines.length < 2) return [];
+  const hdr  = lines[0].split(',').map(h => h.replace(/"/g,'').trim().toUpperCase());
+  const tpI  = hdr.findIndex(h => h === 'TIME_PERIOD');
+  const valI = hdr.findIndex(h => h === 'OBS_VALUE');
+  if (tpI < 0 || valI < 0) return [];
+  return lines.slice(1).map(l => {
+    const c = l.split(',').map(s => s.replace(/"/g,'').trim());
+    return { date: c[tpI], value: parseFloat(c[valI]) };
+  }).filter(r => r.date && !isNaN(r.value));
+}
+
+async function getFRED(series, limit = 60) {
+  const url = `https://api.stlouisfed.org/fred/series/observations?series_id=${series}&api_key=${FRED_KEY}&file_type=json&limit=${limit}&sort_order=desc`;
+  const r = await fetch(url);
+  if (!r.ok) throw new Error(`FRED ${r.status}: ${series}`);
+  const data = await r.json();
+  return (data.observations || [])
+    .filter(o => o.value !== '.')
+    .map(o => ({ date: o.date, value: parseFloat(o.value) }))
+    .filter(o => !isNaN(o.value))
+    .reverse();
+}
+
+async function loadCountry(code) {
+  if (cache[code]) return cache[code];
+  const c = COUNTRIES.find(x => x.code === code);
+
+  // BIS credit gap: dataset WS_CREDIT_GAP v1.0, key Q.{CC}.P.A.B  (B = gap value)
+  // BIS DSR:        dataset WS_DSR        v2.0, key Q.{CC}.P.A
+  const [creditGap, dsr, yieldCurve, housing] = await Promise.all([
+    getBIS('WS_CREDIT_GAP', '1.0', `Q.${c.bis}.P.A.B`).catch(() => []),
+    getBIS('WS_DSR',        '2.0', `Q.${c.bis}.P.A`  ).catch(() => []),
+    getFRED(c.fredYC, 60).catch(() => []),
+    getFRED(c.fredHP, 60).catch(() => []),
+  ]);
+  cache[code] = { creditGap, dsr, yieldCurve, housing };
+  return cache[code];
+}
+
+const last = arr => arr?.length ? arr[arr.length-1] : null;
+
+function cgColor(v)  { if(v==null)return''; if(v>10||v<-6)return'danger'; if(v>2||v<-2)return'warn'; return'ok'; }
+function dsrColor(v) { if(v==null)return''; if(v>25)return'danger'; if(v>18)return'warn'; return'ok'; }
+function ycColor(v, isUS) {
+  if(v==null)return'';
+  if(isUS){ if(v<-0.5)return'danger'; if(v<0.1)return'warn'; return'ok'; }
+  if(v>5.5)return'warn'; return'ok';
+}
+function hpColor(v) { if(v==null)return''; if(v>12)return'danger'; if(v>7||v<-5)return'warn'; return'ok'; }
+
+function destroyChart(id) {
+  if (charts[id]) { try { charts[id].destroy(); } catch(e){} delete charts[id]; }
+}
+
+function spark(id, data, color) {
+  if (!data || data.length < 3) return;
+  destroyChart(id);
+  const el = document.getElementById(id);
+  if (!el) return;
+  const isDark = matchMedia('(prefers-color-scheme: dark)').matches;
+  const grid = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
+  charts[id] = new Chart(el, {
+    type: 'line',
+    data: {
+      labels: data.map(d => d.date),
+      datasets: [{ data: data.map(d => d.value), borderColor: color, borderWidth: 1.5, pointRadius: 0, tension: 0.3, fill: { target:'origin', above: color+'22', below: color+'22' } }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, animation: false,
+      plugins: { legend:{display:false}, tooltip:{ callbacks:{ label: c => c.parsed.y.toFixed(2) }}},
+      scales: {
+        x: { display:false },
+        y: { grid:{color:grid}, border:{display:false}, ticks:{ font:{size:10}, color:'#898781', maxTicksLimit:4, callback: v => v.toFixed(1) }}
+      }
+    }
+  });
+}
+
+function renderCountry(code) {
+  const d = cache[code];
+  if (!d) return;
+  const c     = COUNTRIES.find(x => x.code === code);
+  const isUS  = code === 'US';
+  const cgL   = last(d.creditGap), dsrL = last(d.dsr), ycL = last(d.yieldCurve), hL = last(d.housing);
+  const cgV   = cgL?.value  ?? null;
+  const dsrV  = dsrL?.value ?? null;
+  const ycV   = ycL?.value  ?? null;
+  const hV    = hL?.value   ?? null;
+
+  // House price YoY from index
+  const prevH = d.housing?.length > 3 ? d.housing[d.housing.length - 4] : null;
+  const hYoY  = (hV != null && prevH) ? ((hV / prevH.value - 1) * 100) : null;
+
+  const fmt  = (v, dec, unit='') => v != null ? v.toFixed(dec)+unit : '—';
+  const sign = v => v != null && v >= 0 ? '+' : '';
+
+  const alerts = [];
+  if (cgV != null && cgV > 10)   alerts.push({ level:'danger', msg:`Credit-to-GDP gap of ${cgV.toFixed(1)}pp is above the BIS 10pp crisis threshold.` });
+  else if (cgV != null && cgV > 2) alerts.push({ level:'warn', msg:`Credit-to-GDP gap of ${cgV.toFixed(1)}pp is elevated (above 2pp caution threshold).` });
+  if (isUS && ycV != null && ycV < -0.5) alerts.push({ level:'danger', msg:`Yield curve deeply inverted at ${ycV.toFixed(2)}%.` });
+  else if (isUS && ycV != null && ycV < 0.1) alerts.push({ level:'warn', msg:`Yield curve flat or inverted at ${ycV.toFixed(2)}%.` });
+  if (hYoY != null && hYoY > 12) alerts.push({ level:'danger', msg:`House prices rising ${hYoY.toFixed(1)}% yr/yr — above high-risk threshold.` });
+
+  document.getElementById('alerts').innerHTML = alerts.map(a =>
+    `<div class="alert ${a.level}">&#9651; ${a.msg}</div>`
+  ).join('');
+
+  const tail = arr => arr?.slice(-10) ?? [];
+
+  document.getElementById('content').innerHTML = `
+    <div class="metric-grid">
+      <div class="metric-card">
+        <div class="lbl">Credit-to-GDP gap</div>
+        <div class="val ${cgColor(cgV)}">${fmt(cgV,1,'pp')}</div>
+        <div class="sub">deviation from long-run trend</div>
+        <div class="per">${cgL?.date ?? 'no data'} &middot; BIS</div>
+      </div>
+      <div class="metric-card">
+        <div class="lbl">Debt service ratio</div>
+        <div class="val ${dsrColor(dsrV)}">${fmt(dsrV,1,'%')}</div>
+        <div class="sub">% of income, total private sector</div>
+        <div class="per">${dsrL?.date ?? 'no data'} &middot; BIS</div>
+      </div>
+      <div class="metric-card">
+        <div class="lbl">${c.ycLabel}</div>
+        <div class="val ${ycColor(ycV, isUS)}">${ycV != null ? sign(ycV)+ycV.toFixed(2)+'%' : '—'}</div>
+        <div class="sub">${isUS ? 'inversion = recession signal' : 'long-term rate'}</div>
+        <div class="per">${ycL?.date ?? 'no data'} &middot; FRED</div>
+      </div>
+      <div class="metric-card">
+        <div class="lbl">House prices</div>
+        <div class="val ${hpColor(hYoY)}">${hYoY != null ? sign(hYoY)+hYoY.toFixed(1)+'%' : fmt(hV,0)}</div>
+        <div class="sub">${hYoY != null ? 'year-over-year change' : 'index level'}</div>
+        <div class="per">${hL?.date ?? 'no data'} &middot; FRED / BIS</div>
+      </div>
+    </div>
+    <div class="chart-card">
+      <div class="clabel">Credit-to-GDP gap <span>pp above trend &middot; last 10 quarters</span></div>
+      <div style="position:relative;height:120px"><canvas id="cg-c" role="img" aria-label="Credit gap history for ${c.name}"></canvas></div>
+    </div>
+    <div class="two-col">
+      <div class="chart-card">
+        <div class="clabel">Debt service ratio <span>% of income</span></div>
+        <div style="position:relative;height:100px"><canvas id="dsr-c" role="img" aria-label="DSR history for ${c.name}"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="clabel">${c.ycLabel} <span>%</span></div>
+        <div style="position:relative;height:100px"><canvas id="yc-c" role="img" aria-label="Yield curve history for ${c.name}"></canvas></div>
+      </div>
+    </div>
+  `;
+
+  requestAnimationFrame(() => {
+    spark('cg-c',  tail(d.creditGap),  '#2a78d6');
+    spark('dsr-c', tail(d.dsr),        '#eda100');
+    spark('yc-c',  tail(d.yieldCurve), '#1baf7a');
+  });
+}
+
+function setStatus(src, ok, msg) {
+  document.getElementById(`dot-${src}`).className = `dot ${ok?'ok':'err'}`;
+  document.getElementById(`lbl-${src}`).textContent = msg;
+}
+
+async function loadAll() {
+  const btn = document.getElementById('rbtn');
+  btn.disabled = true; btn.textContent = 'Loading…';
+  cache = {};
+  document.getElementById('content').innerHTML = '<div class="msg">Fetching data from BIS and FRED&hellip;</div>';
+  document.getElementById('alerts').innerHTML = '';
+  ['bis','fred'].forEach(s => { document.getElementById(`dot-${s}`).className='dot pending'; });
+
+  let bisOk = false, fredOk = false;
+
+  await Promise.all(COUNTRIES.map(async c => {
+    await loadCountry(c.code);
+    const d = cache[c.code];
+    if (d.creditGap?.length || d.dsr?.length)      bisOk  = true;
+    if (d.yieldCurve?.length || d.housing?.length) fredOk = true;
+  }));
+
+  setStatus('bis',  bisOk,  bisOk  ? 'BIS — connected'  : 'BIS — no data');
+  setStatus('fred', fredOk, fredOk ? 'FRED — connected' : 'FRED — no data');
+  document.getElementById('lbl-time').textContent = 'Updated ' + new Date().toLocaleString();
+
+  if (!bisOk && !fredOk) {
+    document.getElementById('content').innerHTML = `
+      <div class="error-box">
+        <strong>Could not reach data sources</strong>
+        Check the browser console (F12) for specific errors, then click Refresh.
+      </div>`;
+  } else {
+    renderCountry(active);
+  }
+
+  btn.disabled = false; btn.textContent = '↺ Refresh';
+}
+
+const tabsEl = document.getElementById('tabs');
+COUNTRIES.forEach(c => {
+  const b = document.createElement('button');
+  b.className = 'tab' + (c.code === active ? ' active' : '');
+  b.textContent = c.code; b.title = c.name;
+  b.onclick = () => {
+    active = c.code;
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    b.classList.add('active');
+    if (cache[c.code]) renderCountry(c.code);
+    else { document.getElementById('content').innerHTML = '<div class="msg">Loading…</div>'; loadCountry(c.code).then(() => renderCountry(c.code)); }
+  };
+  tabsEl.appendChild(b);
+});
+
+loadAll();
+</script>
+</body>
+</html>
