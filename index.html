@@ -116,27 +116,29 @@ let active = 'US';
 let cache  = {};
 let charts = {};
 
-// BIS via data.bis.org — correct topic URLs
-// Credit gap key: Q.{CC}.P.A.C  (C = gap = actual minus HP trend)
-// DSR key:        Q.{CC}.P       (3 dimensions only, version 1.0)
-async function getBIS(topic, dataset, version, key, n = 24) {
-  const url = `https://data.bis.org/topics/${topic}/BIS,${dataset},${version}/${key}?file_format=csv&format=long&lastNObservations=${n}`;
+// stats.bis.org supports CORS; data.bis.org does not
+// Credit gap: WS_CREDIT_GAP v1.0, key Q.{CC}.P.A.C (C = gap = actual minus HP trend)
+// DSR:        WS_DSR        v1.0, key Q.{CC}.P      (3 dims only)
+async function getBIS(dataset, version, key, n = 24) {
+  const url = `https://stats.bis.org/api/v2/data/dataflow/BIS/${dataset}/${version}/${key}?format=csv&lastNObservations=${n}`;
   const r = await fetch(url);
   if (!r.ok) throw new Error(`BIS ${r.status}`);
-  return parseBIScsv(await r.text());
+  const text = await r.text();
+  return parseBIScsv(text);
 }
 
 function parseBIScsv(text) {
-  const lines = text.trim().split('\n').filter(l => l.trim() && !l.startsWith('\ufeff') && !l.startsWith('Time Series') && !l.startsWith(','));
+  // stats.bis.org returns clean CSV with a single header row
+  const lines = text.trim().split('\n').filter(l => l.trim());
   if (lines.length < 2) return [];
   const hdr  = lines[0].split(',').map(h => h.replace(/"/g,'').trim().toUpperCase());
   const tpI  = hdr.findIndex(h => h === 'TIME_PERIOD');
   const valI = hdr.findIndex(h => h === 'OBS_VALUE');
   if (tpI < 0 || valI < 0) return [];
   return lines.slice(1).map(l => {
-    const c = l.split(',').map(s => s.replace(/"/g,'').trim());
-    const v = parseFloat(c[valI]);
-    return { date: c[tpI], value: v };
+    const cols = l.split(',').map(s => s.replace(/"/g,'').trim());
+    const v = parseFloat(cols[valI]);
+    return { date: cols[tpI], value: v };
   }).filter(r => r.date && r.date.match(/^\d{4}/) && !isNaN(r.value));
 }
 
@@ -145,7 +147,7 @@ async function getFRED(series, limit = 60) {
   const r = await fetch(url);
   if (!r.ok) throw new Error(`FRED ${r.status}: ${series}`);
   const data = await r.json();
-  if (data.error_code) throw new Error(`FRED error: ${data.error_message}`);
+  if (data.error_code) throw new Error(`FRED: ${data.error_message}`);
   return (data.observations || [])
     .filter(o => o.value !== '.')
     .map(o => ({ date: o.date, value: parseFloat(o.value) }))
@@ -157,10 +159,10 @@ async function loadCountry(code) {
   if (cache[code]) return cache[code];
   const c = COUNTRIES.find(x => x.code === code);
   const [creditGap, dsr, yieldCurve, housing] = await Promise.all([
-    getBIS('CREDIT_GAPS', 'WS_CREDIT_GAP', '1.0', `Q.${c.bis}.P.A.C`).catch(() => []),
-    getBIS('DSR',         'WS_DSR',         '1.0', `Q.${c.bis}.P`    ).catch(() => []),
-    getFRED(c.fredYC, 60).catch(() => []),
-    getFRED(c.fredHP, 60).catch(() => []),
+    getBIS('WS_CREDIT_GAP', '1.0', `Q.${c.bis}.P.A.C`).catch(e => { console.warn('CG', e); return []; }),
+    getBIS('WS_DSR',        '1.0', `Q.${c.bis}.P`    ).catch(e => { console.warn('DSR', e); return []; }),
+    getFRED(c.fredYC, 60).catch(e => { console.warn('YC', e); return []; }),
+    getFRED(c.fredHP, 60).catch(e => { console.warn('HP', e); return []; }),
   ]);
   cache[code] = { creditGap, dsr, yieldCurve, housing };
   return cache[code];
@@ -215,23 +217,20 @@ function renderCountry(code) {
   const dsrV = dsrL?.value ?? null;
   const ycV  = ycL?.value  ?? null;
   const hV   = hL?.value   ?? null;
-
-  // House price YoY (quarterly data: 4 obs back = 1 year)
   const prevH = d.housing?.length > 4 ? d.housing[d.housing.length - 5] : null;
   const hYoY  = (hV != null && prevH) ? ((hV / prevH.value - 1) * 100) : null;
-
-  const fmt  = (v, dec, unit='') => v != null ? v.toFixed(dec)+unit : '—';
+  const fmt  = (v, dec, unit='') => v != null ? v.toFixed(dec)+unit : '\u2014';
   const sign = v => v != null && v >= 0 ? '+' : '';
 
   const alerts = [];
-  if (cgV != null && cgV > 10)    alerts.push({ level:'danger', msg:`Credit-to-GDP gap of ${cgV.toFixed(1)}pp is above the BIS 10pp crisis threshold.` });
-  else if (cgV != null && cgV > 2) alerts.push({ level:'warn',  msg:`Credit-to-GDP gap of ${cgV.toFixed(1)}pp is elevated (above 2pp caution threshold).` });
+  if (cgV != null && cgV > 10)     alerts.push({ level:'danger', msg:`Credit-to-GDP gap of ${cgV.toFixed(1)}pp is above the BIS 10pp crisis threshold.` });
+  else if (cgV != null && cgV > 2) alerts.push({ level:'warn',   msg:`Credit-to-GDP gap of ${cgV.toFixed(1)}pp is elevated (above 2pp caution threshold).` });
   if (isUS && ycV != null && ycV < -0.5) alerts.push({ level:'danger', msg:`Yield curve deeply inverted at ${ycV.toFixed(2)}%.` });
   else if (isUS && ycV != null && ycV < 0.1) alerts.push({ level:'warn', msg:`Yield curve flat or inverted at ${ycV.toFixed(2)}%.` });
-  if (hYoY != null && hYoY > 12) alerts.push({ level:'danger', msg:`House prices rising ${hYoY.toFixed(1)}% yr/yr.` });
+  if (hYoY != null && hYoY > 12)  alerts.push({ level:'danger', msg:`House prices rising ${hYoY.toFixed(1)}% yr/yr.` });
 
   document.getElementById('alerts').innerHTML = alerts.map(a =>
-    `<div class="alert ${a.level}">&#9651; ${a.msg}</div>`
+    `<div class="alert ${a.level}">\u25b3 ${a.msg}</div>`
   ).join('');
 
   const tail = arr => arr?.slice(-10) ?? [];
@@ -252,7 +251,7 @@ function renderCountry(code) {
       </div>
       <div class="metric-card">
         <div class="lbl">${c.ycLabel}</div>
-        <div class="val ${ycColor(ycV, isUS)}">${ycV != null ? sign(ycV)+ycV.toFixed(2)+'%' : '—'}</div>
+        <div class="val ${ycColor(ycV, isUS)}">${ycV != null ? sign(ycV)+ycV.toFixed(2)+'%' : '\u2014'}</div>
         <div class="sub">${isUS ? 'inversion = recession signal' : 'long-term rate'}</div>
         <div class="per">${ycL?.date ?? 'no data'} &middot; FRED</div>
       </div>
@@ -295,7 +294,7 @@ async function loadAll() {
   const btn = document.getElementById('rbtn');
   btn.disabled = true; btn.textContent = 'Loading\u2026';
   cache = {};
-  document.getElementById('content').innerHTML = '<div class="msg">Fetching data from BIS and FRED\u2026</div>';
+  document.getElementById('content').innerHTML = '<div class="msg">Fetching data\u2026</div>';
   document.getElementById('alerts').innerHTML = '';
   ['bis','fred'].forEach(s => { document.getElementById(`dot-${s}`).className='dot pending'; });
 
