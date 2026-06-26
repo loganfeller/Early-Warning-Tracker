@@ -116,19 +116,15 @@ let active = 'US';
 let cache  = {};
 let charts = {};
 
-// stats.bis.org supports CORS; data.bis.org does not
-// Credit gap: WS_CREDIT_GAP v1.0, key Q.{CC}.P.A.C (C = gap = actual minus HP trend)
-// DSR:        WS_DSR        v1.0, key Q.{CC}.P      (3 dims only)
+// BIS — stats.bis.org supports CORS
 async function getBIS(dataset, version, key, n = 24) {
   const url = `https://stats.bis.org/api/v2/data/dataflow/BIS/${dataset}/${version}/${key}?format=csv&lastNObservations=${n}`;
   const r = await fetch(url);
   if (!r.ok) throw new Error(`BIS ${r.status}`);
-  const text = await r.text();
-  return parseBIScsv(text);
+  return parseBIScsv(await r.text());
 }
 
 function parseBIScsv(text) {
-  // stats.bis.org returns clean CSV with a single header row
   const lines = text.trim().split('\n').filter(l => l.trim());
   if (lines.length < 2) return [];
   const hdr  = lines[0].split(',').map(h => h.replace(/"/g,'').trim().toUpperCase());
@@ -137,32 +133,44 @@ function parseBIScsv(text) {
   if (tpI < 0 || valI < 0) return [];
   return lines.slice(1).map(l => {
     const cols = l.split(',').map(s => s.replace(/"/g,'').trim());
-    const v = parseFloat(cols[valI]);
-    return { date: cols[tpI], value: v };
+    return { date: cols[tpI], value: parseFloat(cols[valI]) };
   }).filter(r => r.date && r.date.match(/^\d{4}/) && !isNaN(r.value));
 }
 
+// FRED — try direct first, fall back to two proxies
 async function getFRED(series, limit = 60) {
-  const url = `https://api.stlouisfed.org/fred/series/observations?series_id=${series}&api_key=${FRED_KEY}&file_type=json&limit=${limit}&sort_order=desc`;
-  const r = await fetch(url);
-  if (!r.ok) throw new Error(`FRED ${r.status}: ${series}`);
-  const data = await r.json();
-  if (data.error_code) throw new Error(`FRED: ${data.error_message}`);
-  return (data.observations || [])
-    .filter(o => o.value !== '.')
-    .map(o => ({ date: o.date, value: parseFloat(o.value) }))
-    .filter(o => !isNaN(o.value))
-    .reverse();
+  const fredUrl = `https://api.stlouisfed.org/fred/series/observations?series_id=${series}&api_key=${FRED_KEY}&file_type=json&limit=${limit}&sort_order=desc`;
+  const proxies = [
+    fredUrl,
+    `https://corsproxy.io/?${encodeURIComponent(fredUrl)}`,
+    `https://api.allorigins.win/raw?url=${encodeURIComponent(fredUrl)}`,
+  ];
+  for (const url of proxies) {
+    try {
+      const r = await fetch(url, { signal: AbortSignal.timeout(7000) });
+      if (!r.ok) continue;
+      const text = await r.text();
+      const data = JSON.parse(text);
+      if (data.error_code) continue;
+      const obs = (data.observations || [])
+        .filter(o => o.value !== '.')
+        .map(o => ({ date: o.date, value: parseFloat(o.value) }))
+        .filter(o => !isNaN(o.value))
+        .reverse();
+      if (obs.length) return obs;
+    } catch(e) { continue; }
+  }
+  return [];
 }
 
 async function loadCountry(code) {
   if (cache[code]) return cache[code];
   const c = COUNTRIES.find(x => x.code === code);
   const [creditGap, dsr, yieldCurve, housing] = await Promise.all([
-    getBIS('WS_CREDIT_GAP', '1.0', `Q.${c.bis}.P.A.C`).catch(e => { console.warn('CG', e); return []; }),
-    getBIS('WS_DSR',        '1.0', `Q.${c.bis}.P`    ).catch(e => { console.warn('DSR', e); return []; }),
-    getFRED(c.fredYC, 60).catch(e => { console.warn('YC', e); return []; }),
-    getFRED(c.fredHP, 60).catch(e => { console.warn('HP', e); return []; }),
+    getBIS('WS_CREDIT_GAP', '1.0', `Q.${c.bis}.P.A.C`).catch(() => []),
+    getBIS('WS_DSR',        '1.0', `Q.${c.bis}.P`    ).catch(() => []),
+    getFRED(c.fredYC, 60),
+    getFRED(c.fredHP, 60),
   ]);
   cache[code] = { creditGap, dsr, yieldCurve, housing };
   return cache[code];
@@ -308,7 +316,7 @@ async function loadAll() {
   }));
 
   setStatus('bis',  bisOk,  bisOk  ? 'BIS \u2014 connected'  : 'BIS \u2014 no data');
-  setStatus('fred', fredOk, fredOk ? 'FRED \u2014 connected' : 'FRED \u2014 no data');
+  setStatus('fred', fredOk, fredOk ? 'FRED \u2014 connected' : 'FRED \u2014 no data (proxy unavailable)');
   document.getElementById('lbl-time').textContent = 'Updated ' + new Date().toLocaleString();
 
   if (!bisOk && !fredOk) {
