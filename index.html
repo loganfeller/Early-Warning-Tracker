@@ -137,22 +137,26 @@ function parseBIScsv(text) {
   }).filter(r => r.date && r.date.match(/^\d{4}/) && !isNaN(r.value));
 }
 
-// FRED — try direct first, fall back to two proxies
+// FRED — try direct first, then proxies with different encoding strategies
 async function getFRED(series, limit = 60) {
   const fredUrl = `https://api.stlouisfed.org/fred/series/observations?series_id=${series}&api_key=${FRED_KEY}&file_type=json&limit=${limit}&sort_order=desc`;
-  const proxies = [
-    fredUrl,
-    `https://corsproxy.io/?${encodeURIComponent(fredUrl)}`,
-    `https://api.allorigins.win/raw?url=${encodeURIComponent(fredUrl)}`,
+  const attempts = [
+    () => fetch(fredUrl, { signal: AbortSignal.timeout(7000) }),
+    () => fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(fredUrl)}`, { signal: AbortSignal.timeout(10000) }),
+    () => fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(fredUrl)}`, { signal: AbortSignal.timeout(10000) }),
+    () => fetch(`https://corsproxy.io/?url=${encodeURIComponent(fredUrl)}`, { signal: AbortSignal.timeout(10000) }),
   ];
-  for (const url of proxies) {
+  for (const attempt of attempts) {
     try {
-      const r = await fetch(url, { signal: AbortSignal.timeout(7000) });
+      const r = await attempt();
       if (!r.ok) continue;
       const text = await r.text();
-      const data = JSON.parse(text);
-      if (data.error_code) continue;
-      const obs = (data.observations || [])
+      // allorigins /get wraps in {contents: "..."}
+      let parsed;
+      try { parsed = JSON.parse(text); } catch(e) { continue; }
+      const data = parsed.contents ? JSON.parse(parsed.contents) : parsed;
+      if (data.error_code || !data.observations) continue;
+      const obs = data.observations
         .filter(o => o.value !== '.')
         .map(o => ({ date: o.date, value: parseFloat(o.value) }))
         .filter(o => !isNaN(o.value))
