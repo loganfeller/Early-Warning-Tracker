@@ -1,0 +1,33 @@
+{
+  "updated": "2026-06-29T15:08:44Z",
+  "countries": {
+    "US": {
+      "yieldCurve": [],
+      "housing": []
+    },
+    "CA": {
+      "yieldCurve": [],
+      "housing": []
+    },
+    "JP": {
+      "yieldCurve": [],
+      "housing": []
+    },
+    "DE": {
+      "yieldCurve": [],
+      "housing": []
+    },
+    "FR": {
+      "yieldCurve": [],
+      "housing": []
+    },
+    "IT": {
+      "yieldCurve": [],
+      "housing": []
+    },
+    "GB": {
+      "yieldCurve": [],
+      "housing": []
+    }
+  }
+}
