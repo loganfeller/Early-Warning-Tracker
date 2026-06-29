@@ -1,7 +1,7 @@
 import requests, json, os
 from datetime import datetime
 
-FRED_KEY = os.environ.get("FRED_API_KEY", "")
+FRED_KEY = os.environ.get("FRED_API_KEY", "a14f8c0f79b27d486d3b7b9cb5b4b04a")
 BASE = "https://api.stlouisfed.org/fred/series/observations"
 
 SERIES = {
