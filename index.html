@@ -100,23 +100,22 @@
 </div>
 
 <script>
-const FRED_KEY = 'a14f8c0f79b27d486d3b7b9cb5b4b04a';
-
 const COUNTRIES = [
-  { code:'US', name:'United States',  bis:'US', fredYC:'T10Y2Y',          fredHP:'QUSN628BIS',  ycLabel:'10yr\u22122yr spread' },
-  { code:'CA', name:'Canada',         bis:'CA', fredYC:'IRLTLT01CAM156N', fredHP:'QCAN628BIS',  ycLabel:'10yr gov bond' },
-  { code:'JP', name:'Japan',          bis:'JP', fredYC:'IRLTLT01JPM156N', fredHP:'QJPN628BIS',  ycLabel:'10yr gov bond' },
-  { code:'DE', name:'Germany',        bis:'DE', fredYC:'IRLTLT01DEM156N', fredHP:'QDER628BIS',  ycLabel:'10yr gov bond' },
-  { code:'FR', name:'France',         bis:'FR', fredYC:'IRLTLT01FRM156N', fredHP:'QFRR628BIS',  ycLabel:'10yr gov bond' },
-  { code:'IT', name:'Italy',          bis:'IT', fredYC:'IRLTLT01ITM156N', fredHP:'QITR628BIS',  ycLabel:'10yr gov bond' },
-  { code:'GB', name:'United Kingdom', bis:'GB', fredYC:'IRLTLT01GBM156N', fredHP:'QGBR628BIS',  ycLabel:'10yr gov bond' },
+  { code:'US', name:'United States',  bis:'US', ycLabel:'10yr\u22122yr spread' },
+  { code:'CA', name:'Canada',         bis:'CA', ycLabel:'10yr gov bond' },
+  { code:'JP', name:'Japan',          bis:'JP', ycLabel:'10yr gov bond' },
+  { code:'DE', name:'Germany',        bis:'DE', ycLabel:'10yr gov bond' },
+  { code:'FR', name:'France',         bis:'FR', ycLabel:'10yr gov bond' },
+  { code:'IT', name:'Italy',          bis:'IT', ycLabel:'10yr gov bond' },
+  { code:'GB', name:'United Kingdom', bis:'GB', ycLabel:'10yr gov bond' },
 ];
 
 let active = 'US';
 let cache  = {};
 let charts = {};
+let fredData = {};  // loaded once from data.json
 
-// BIS — stats.bis.org supports CORS
+// BIS — live, CORS-friendly
 async function getBIS(dataset, version, key, n = 24) {
   const url = `https://stats.bis.org/api/v2/data/dataflow/BIS/${dataset}/${version}/${key}?format=csv&lastNObservations=${n}`;
   const r = await fetch(url);
@@ -137,36 +136,34 @@ function parseBIScsv(text) {
   }).filter(r => r.date && r.date.match(/^\d{4}/) && !isNaN(r.value));
 }
 
-// FRED — use CSV endpoint (txt file_type) which allows CORS from any origin
-async function getFRED(series, limit = 60) {
-  const url = `https://fred.stlouisfed.org/graph/fredgraph.csv?id=${series}&vintage_date=&start_date=1990-01-01`;
+// FRED — read from data.json (populated by GitHub Actions)
+async function loadFredData() {
   try {
-    const r = await fetch(url, { signal: AbortSignal.timeout(10000) });
-    if (!r.ok) throw new Error(`FRED CSV ${r.status}`);
-    const text = await r.text();
-    const lines = text.trim().split('\n').filter(l => l.trim());
-    if (lines.length < 2) return [];
-    // CSV format: DATE,VALUE
-    return lines.slice(1).map(l => {
-      const [date, val] = l.split(',');
-      return { date: date?.trim(), value: parseFloat(val?.trim()) };
-    }).filter(r => r.date && !isNaN(r.value)).slice(-limit);
+    const r = await fetch('data.json?t=' + Date.now());
+    if (!r.ok) throw new Error('data.json not found');
+    const data = await r.json();
+    fredData = data.countries || {};
+    return { ok: true, updated: data.updated };
   } catch(e) {
-    console.warn('FRED CSV failed:', series, e);
-    return [];
+    console.warn('data.json failed:', e);
+    return { ok: false };
   }
 }
 
 async function loadCountry(code) {
   if (cache[code]) return cache[code];
   const c = COUNTRIES.find(x => x.code === code);
-  const [creditGap, dsr, yieldCurve, housing] = await Promise.all([
+  const [creditGap, dsr] = await Promise.all([
     getBIS('WS_CREDIT_GAP', '1.0', `Q.${c.bis}.P.A.C`).catch(() => []),
     getBIS('WS_DSR',        '1.0', `Q.${c.bis}.P`    ).catch(() => []),
-    getFRED(c.fredYC, 60),
-    getFRED(c.fredHP, 60),
   ]);
-  cache[code] = { creditGap, dsr, yieldCurve, housing };
+  const fred = fredData[code] || {};
+  cache[code] = {
+    creditGap,
+    dsr,
+    yieldCurve: fred.yieldCurve || [],
+    housing:    fred.housing    || [],
+  };
   return cache[code];
 }
 
@@ -300,25 +297,26 @@ async function loadAll() {
   document.getElementById('alerts').innerHTML = '';
   ['bis','fred'].forEach(s => { document.getElementById(`dot-${s}`).className='dot pending'; });
 
-  let bisOk = false, fredOk = false;
+  // Load FRED data.json and BIS in parallel
+  const [fredResult] = await Promise.all([loadFredData()]);
 
+  let bisOk = false;
   await Promise.all(COUNTRIES.map(async c => {
     await loadCountry(c.code);
     const d = cache[c.code];
-    if (d.creditGap?.length || d.dsr?.length)      bisOk  = true;
-    if (d.yieldCurve?.length || d.housing?.length) fredOk = true;
+    if (d.creditGap?.length || d.dsr?.length) bisOk = true;
   }));
 
+  const fredOk = Object.keys(fredData).length > 0;
   setStatus('bis',  bisOk,  bisOk  ? 'BIS \u2014 connected'  : 'BIS \u2014 no data');
-  setStatus('fred', fredOk, fredOk ? 'FRED \u2014 connected' : 'FRED \u2014 no data (proxy unavailable)');
-  document.getElementById('lbl-time').textContent = 'Updated ' + new Date().toLocaleString();
+  setStatus('fred', fredOk,
+    fredOk
+      ? `FRED \u2014 updated ${fredResult.updated ? new Date(fredResult.updated).toLocaleDateString() : 'recently'}`
+      : 'FRED \u2014 data.json not found (run workflow first)'
+  );
+  document.getElementById('lbl-time').textContent = 'Loaded ' + new Date().toLocaleTimeString();
 
-  if (!bisOk && !fredOk) {
-    document.getElementById('content').innerHTML = `<div class="error-box"><strong>Could not reach data sources</strong>Open the browser console (F12) for details.</div>`;
-  } else {
-    renderCountry(active);
-  }
-
+  renderCountry(active);
   btn.disabled = false; btn.textContent = '\u21ba Refresh';
 }
 
