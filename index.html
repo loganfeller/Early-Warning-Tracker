@@ -246,8 +246,14 @@ function makeChart(id, data, color, thresholds) {
             font: { size: 9 }, color: '#898781', maxTicksLimit: 6, maxRotation: 0,
             callback: function(val, idx) {
               const lbl = this.getLabelForValue(val);
-              // Show only Jan or Q1 labels
-              if (lbl && (lbl.includes('-01') || lbl.includes('Q1'))) return lbl.substring(0,4);
+              if (!lbl) return '';
+              // Quarterly format: 2005-Q1
+              if (lbl.includes('Q1')) return lbl.substring(0,4);
+              // Daily/monthly format: show year for January entries only
+              const parts = lbl.split('-');
+              if (parts.length >= 2 && parts[1] === '01') {
+                if (parts.length === 2 || parts[2] === '01') return parts[0];
+              }
               return '';
             }
           },
