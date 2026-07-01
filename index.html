@@ -21,18 +21,22 @@
     }
   }
   body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-size: 14px; line-height: 1.5; }
-  .page { max-width: 900px; margin: 0 auto; padding: 2rem 1.25rem 4rem; }
-  .page-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 2rem; padding-bottom: 1.25rem; border-bottom: 0.5px solid var(--border-strong); gap: 1rem; flex-wrap: wrap; }
+  .page { max-width: 960px; margin: 0 auto; padding: 2rem 1.25rem 4rem; }
+  .page-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 1.5rem; padding-bottom: 1.25rem; border-bottom: 0.5px solid var(--border-strong); gap: 1rem; flex-wrap: wrap; }
   .page-header h1 { font-size: 18px; font-weight: 500; }
   .page-header p { font-size: 12px; color: var(--text-3); margin-top: 3px; }
-  .btn { font-size: 12px; font-weight: 500; padding: 6px 14px; border-radius: var(--radius); border: 0.5px solid var(--border-strong); background: var(--surface); color: var(--text-2); cursor: pointer; display: flex; align-items: center; gap: 5px; white-space: nowrap; }
+  .btn { font-size: 12px; font-weight: 500; padding: 6px 14px; border-radius: var(--radius); border: 0.5px solid var(--border-strong); background: var(--surface); color: var(--text-2); cursor: pointer; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
   .btn:hover { background: var(--surface2); }
   .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* Tabs */
   .tabs { display: flex; gap: 4px; margin-bottom: 1.5rem; flex-wrap: wrap; }
   .tab { font-size: 12px; font-weight: 500; padding: 5px 13px; border-radius: var(--radius); border: 0.5px solid var(--border); background: none; color: var(--text-3); cursor: pointer; }
   .tab:hover { background: var(--surface); color: var(--text); }
   .tab.active { background: #dbeafe; border-color: #93c5fd; color: #1d4ed8; }
   @media (prefers-color-scheme: dark) { .tab.active { background: #1e3a5f; border-color: #2563eb; color: #93c5fd; } }
+
+  /* Alerts */
   .alerts { margin-bottom: 1.25rem; }
   .alert { border-radius: var(--radius); padding: 8px 12px; font-size: 12px; margin-bottom: 6px; display: flex; align-items: flex-start; gap: 7px; line-height: 1.4; }
   .alert.warn  { background: #fef9ec; border: 0.5px solid #fbbf24; color: #92400e; }
@@ -41,29 +45,36 @@
     .alert.warn  { background: #2d2000; border-color: #854d0e; color: #fde68a; }
     .alert.danger { background: #2d0a0a; border-color: #7f1d1d; color: #fca5a5; }
   }
-  .metric-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-bottom: 1rem; }
+
+  /* Metric grid */
+  .metric-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-bottom: 1rem; }
   .metric-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: 12px; padding: 16px 18px; }
-  .metric-card .lbl { font-size: 10px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-3); margin-bottom: 8px; }
+  .metric-card .lbl { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-3); margin-bottom: 4px; }
+  .metric-card .def { font-size: 11px; color: var(--text-3); margin-bottom: 8px; font-style: italic; line-height: 1.4; }
   .metric-card .val { font-size: 28px; font-weight: 500; font-variant-numeric: tabular-nums; line-height: 1; color: var(--text); }
   .metric-card .val.ok { color: var(--ok); }
   .metric-card .val.warn { color: var(--warn); }
   .metric-card .val.danger { color: var(--danger); }
   .metric-card .sub { font-size: 11px; color: var(--text-3); margin-top: 5px; }
   .metric-card .per { font-size: 10px; color: var(--text-3); margin-top: 10px; padding-top: 8px; border-top: 0.5px solid var(--border); }
-  .chart-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: 12px; padding: 16px 18px; margin-bottom: 10px; }
-  .chart-card .clabel { font-size: 12px; font-weight: 500; color: var(--text-2); margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
-  .chart-card .clabel span { font-size: 11px; font-weight: 400; color: var(--text-3); }
-  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  @media (max-width: 540px) { .two-col { grid-template-columns: 1fr; } }
+
+  /* Charts */
+  .chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+  @media (max-width: 600px) { .chart-grid { grid-template-columns: 1fr; } }
+  .chart-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: 12px; padding: 16px 18px; }
+  .chart-card .clabel { font-size: 12px; font-weight: 500; color: var(--text-2); margin-bottom: 4px; }
+  .chart-card .cdef { font-size: 11px; color: var(--text-3); margin-bottom: 10px; line-height: 1.4; }
+
+  /* Legend */
   .legend { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 1.25rem; font-size: 11px; color: var(--text-3); }
   .legend span { display: flex; align-items: center; gap: 5px; }
   .swatch { width: 22px; height: 3px; border-radius: 2px; display: inline-block; }
-  .status-bar { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 1.5rem; padding-top: 1rem; border-top: 0.5px solid var(--border); font-size: 11px; color: var(--text-3); align-items: center; }
+
+  /* Status bar */
+  .status-bar { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 1.5rem; padding-top: 1rem; border-top: 0.5px solid var(--border); font-size: 11px; color: var(--text-3); align-items: center; justify-content: space-between; }
   .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 4px; }
   .dot.ok { background: var(--ok); } .dot.err { background: var(--danger); } .dot.pending { background: var(--text-3); }
   .msg { text-align: center; padding: 3rem 0; color: var(--text-3); font-size: 13px; }
-  .error-box { background: var(--surface); border: 0.5px solid var(--border); border-radius: 12px; padding: 20px; font-size: 13px; color: var(--text-2); }
-  .error-box strong { display: block; margin-bottom: 6px; color: var(--text); }
   .thresholds { font-size: 11px; color: var(--text-3); background: var(--surface2); border-radius: var(--radius); padding: 8px 12px; margin-bottom: 1.25rem; line-height: 1.6; }
   .thresholds b { color: var(--text-2); }
 </style>
@@ -77,46 +88,60 @@
     </div>
     <button class="btn" id="rbtn" onclick="loadAll()">&#8635; Refresh</button>
   </div>
+
   <div class="tabs" id="tabs"></div>
+
   <div class="thresholds">
     <b>Alert thresholds (BIS research):</b>
-    Credit-to-GDP gap &gt;2pp = caution &middot; &gt;10pp = crisis-level &middot;
+    Credit-to-GDP gap &gt;2pp or &lt;-2pp = caution &middot; &gt;10pp or &lt;-6pp = high risk &middot;
     DSR &gt;18% = elevated &middot; &gt;25% = high risk &middot;
     Yield curve &lt;0% = inversion signal &middot;
     House prices &gt;7% yr/yr = elevated
   </div>
+
   <div class="legend">
     <span><span class="swatch" style="background:var(--ok)"></span>within normal range</span>
     <span><span class="swatch" style="background:var(--warn)"></span>elevated — caution</span>
     <span><span class="swatch" style="background:var(--danger)"></span>above crisis threshold</span>
   </div>
+
   <div class="alerts" id="alerts"></div>
   <div id="content"><div class="msg">Fetching data&hellip;</div></div>
+
   <div class="status-bar">
-    <div><span class="dot pending" id="dot-bis"></span><span id="lbl-bis">BIS &mdash; waiting</span></div>
-    <div><span class="dot pending" id="dot-fred"></span><span id="lbl-fred">FRED &mdash; waiting</span></div>
+    <div style="display:flex;gap:1rem;flex-wrap:wrap">
+      <div><span class="dot pending" id="dot-bis"></span><span id="lbl-bis">BIS &mdash; waiting</span></div>
+      <div><span class="dot pending" id="dot-fred"></span><span id="lbl-fred">FRED &mdash; waiting</span></div>
+    </div>
     <div id="lbl-time"></div>
   </div>
 </div>
 
 <script>
+// G7 sorted by GDP size (2024 IMF estimates)
 const COUNTRIES = [
-  { code:'US', name:'United States',  bis:'US', ycLabel:'10yr\u22122yr spread' },
-  { code:'CA', name:'Canada',         bis:'CA', ycLabel:'10yr gov bond' },
+  { code:'US', name:'United States',  bis:'US', ycLabel:'10yr\u22122yr spread', ycUS: true },
   { code:'JP', name:'Japan',          bis:'JP', ycLabel:'10yr gov bond' },
   { code:'DE', name:'Germany',        bis:'DE', ycLabel:'10yr gov bond' },
+  { code:'GB', name:'United Kingdom', bis:'GB', ycLabel:'10yr gov bond' },
   { code:'FR', name:'France',         bis:'FR', ycLabel:'10yr gov bond' },
   { code:'IT', name:'Italy',          bis:'IT', ycLabel:'10yr gov bond' },
-  { code:'GB', name:'United Kingdom', bis:'GB', ycLabel:'10yr gov bond' },
+  { code:'CA', name:'Canada',         bis:'CA', ycLabel:'10yr gov bond' },
 ];
+
+const DEFS = {
+  creditGap: 'Deviation of credit-to-GDP ratio from its long-run trend. Positive = credit growing faster than normal; negative = below trend.',
+  dsr: 'Share of household/private sector income spent servicing debt (interest + principal).',
+  yc: 'Difference between 10-year and 2-year Treasury yields. Negative = inverted curve, a recession signal.',
+  hp: 'Year-over-year change in residential property prices.',
+};
 
 let active = 'US';
 let cache  = {};
 let charts = {};
-let fredData = {};  // loaded once from data.json
+let fredData = {};
 
-// BIS — live, CORS-friendly
-async function getBIS(dataset, version, key, n = 24) {
+async function getBIS(dataset, version, key, n = 80) {
   const url = `https://stats.bis.org/api/v2/data/dataflow/BIS/${dataset}/${version}/${key}?format=csv&lastNObservations=${n}`;
   const r = await fetch(url);
   if (!r.ok) throw new Error(`BIS ${r.status}`);
@@ -136,7 +161,6 @@ function parseBIScsv(text) {
   }).filter(r => r.date && r.date.match(/^\d{4}/) && !isNaN(r.value));
 }
 
-// FRED — read from data.json (populated by GitHub Actions)
 async function loadFredData() {
   try {
     const r = await fetch('data.json?t=' + Date.now());
@@ -145,7 +169,6 @@ async function loadFredData() {
     fredData = data.countries || {};
     return { ok: true, updated: data.updated };
   } catch(e) {
-    console.warn('data.json failed:', e);
     return { ok: false };
   }
 }
@@ -154,16 +177,11 @@ async function loadCountry(code) {
   if (cache[code]) return cache[code];
   const c = COUNTRIES.find(x => x.code === code);
   const [creditGap, dsr] = await Promise.all([
-    getBIS('WS_CREDIT_GAP', '1.0', `Q.${c.bis}.P.A.C`).catch(() => []),
-    getBIS('WS_DSR',        '1.0', `Q.${c.bis}.P`    ).catch(() => []),
+    getBIS('WS_CREDIT_GAP', '1.0', `Q.${c.bis}.P.A.C`, 80).catch(() => []),
+    getBIS('WS_DSR',        '1.0', `Q.${c.bis}.P`,     80).catch(() => []),
   ]);
   const fred = fredData[code] || {};
-  cache[code] = {
-    creditGap,
-    dsr,
-    yieldCurve: fred.yieldCurve || [],
-    housing:    fred.housing    || [],
-  };
+  cache[code] = { creditGap, dsr, yieldCurve: fred.yieldCurve||[], housing: fred.housing||[] };
   return cache[code];
 }
 
@@ -182,24 +200,59 @@ function destroyChart(id) {
   if (charts[id]) { try { charts[id].destroy(); } catch(e){} delete charts[id]; }
 }
 
-function spark(id, data, color) {
+function makeChart(id, data, color, thresholds) {
   if (!data || data.length < 3) return;
   destroyChart(id);
   const el = document.getElementById(id);
   if (!el) return;
   const isDark = matchMedia('(prefers-color-scheme: dark)').matches;
   const grid = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
+
+  // Build threshold annotation lines
+  const annotations = {};
+  if (thresholds) {
+    thresholds.forEach((t, i) => {
+      annotations[`t${i}`] = {
+        type: 'line',
+        yMin: t.value, yMax: t.value,
+        borderColor: t.color,
+        borderWidth: 1,
+        borderDash: [4, 3],
+        label: { content: t.label, display: true, position: 'end', font: { size: 9 }, color: t.color, backgroundColor: 'transparent', padding: 2 }
+      };
+    });
+  }
+
+  // Thin out x-axis labels to avoid crowding
+  const labels = data.map(d => d.date);
+
   charts[id] = new Chart(el, {
     type: 'line',
     data: {
-      labels: data.map(d => d.date),
-      datasets: [{ data: data.map(d => d.value), borderColor: color, borderWidth: 1.5, pointRadius: 0, tension: 0.3, fill: { target:'origin', above: color+'22', below: color+'22' } }]
+      labels,
+      datasets: [{ data: data.map(d => d.value), borderColor: color, borderWidth: 1.5, pointRadius: 0, tension: 0.3, fill: { target:'origin', above: color+'18', below: color+'18' } }]
     },
     options: {
       responsive: true, maintainAspectRatio: false, animation: false,
-      plugins: { legend:{display:false}, tooltip:{ callbacks:{ label: c => c.parsed.y.toFixed(2) }}},
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: c => c.parsed.y.toFixed(2) }},
+        annotation: { annotations }
+      },
       scales: {
-        x: { display:false },
+        x: {
+          display: true,
+          ticks: {
+            font: { size: 9 }, color: '#898781', maxTicksLimit: 6, maxRotation: 0,
+            callback: function(val, idx) {
+              const lbl = this.getLabelForValue(val);
+              // Show only Jan or Q1 labels
+              if (lbl && (lbl.includes('-01') || lbl.includes('Q1'))) return lbl.substring(0,4);
+              return '';
+            }
+          },
+          grid: { display: false }
+        },
         y: { grid:{color:grid}, border:{display:false}, ticks:{ font:{size:10}, color:'#898781', maxTicksLimit:4, callback: v => v.toFixed(1) }}
       }
     }
@@ -222,65 +275,92 @@ function renderCountry(code) {
   const sign = v => v != null && v >= 0 ? '+' : '';
 
   const alerts = [];
-  if (cgV != null && cgV > 10)     alerts.push({ level:'danger', msg:`Credit-to-GDP gap of ${cgV.toFixed(1)}pp is above the BIS 10pp crisis threshold.` });
-  else if (cgV != null && cgV > 2) alerts.push({ level:'warn',   msg:`Credit-to-GDP gap of ${cgV.toFixed(1)}pp is elevated (above 2pp caution threshold).` });
+  if (cgV != null && cgV > 10)     alerts.push({ level:'danger', msg:`Credit-to-GDP gap of ${cgV.toFixed(1)}pp exceeds the BIS 10pp crisis threshold.` });
+  else if (cgV != null && cgV < -6) alerts.push({ level:'danger', msg:`Credit-to-GDP gap of ${cgV.toFixed(1)}pp is deeply negative, indicating significant credit contraction.` });
+  else if (cgV != null && (cgV > 2 || cgV < -2)) alerts.push({ level:'warn', msg:`Credit-to-GDP gap of ${cgV.toFixed(1)}pp is outside the normal ±2pp range.` });
   if (isUS && ycV != null && ycV < -0.5) alerts.push({ level:'danger', msg:`Yield curve deeply inverted at ${ycV.toFixed(2)}%.` });
   else if (isUS && ycV != null && ycV < 0.1) alerts.push({ level:'warn', msg:`Yield curve flat or inverted at ${ycV.toFixed(2)}%.` });
-  if (hYoY != null && hYoY > 12)  alerts.push({ level:'danger', msg:`House prices rising ${hYoY.toFixed(1)}% yr/yr.` });
+  if (hYoY != null && hYoY > 12) alerts.push({ level:'danger', msg:`House prices rising ${hYoY.toFixed(1)}% yr/yr — above high-risk threshold.` });
+  else if (hYoY != null && hYoY > 7) alerts.push({ level:'warn', msg:`House prices rising ${hYoY.toFixed(1)}% yr/yr — above caution threshold.` });
 
   document.getElementById('alerts').innerHTML = alerts.map(a =>
     `<div class="alert ${a.level}">\u25b3 ${a.msg}</div>`
   ).join('');
 
-  const tail = arr => arr?.slice(-10) ?? [];
-
   document.getElementById('content').innerHTML = `
     <div class="metric-grid">
       <div class="metric-card">
         <div class="lbl">Credit-to-GDP gap</div>
+        <div class="def">${DEFS.creditGap}</div>
         <div class="val ${cgColor(cgV)}">${fmt(cgV,1,'pp')}</div>
         <div class="sub">deviation from long-run trend</div>
         <div class="per">${cgL?.date ?? 'no data'} &middot; BIS</div>
       </div>
       <div class="metric-card">
         <div class="lbl">Debt service ratio</div>
+        <div class="def">${DEFS.dsr}</div>
         <div class="val ${dsrColor(dsrV)}">${fmt(dsrV,1,'%')}</div>
         <div class="sub">% of income, private sector</div>
         <div class="per">${dsrL?.date ?? 'no data'} &middot; BIS</div>
       </div>
       <div class="metric-card">
         <div class="lbl">${c.ycLabel}</div>
+        <div class="def">${DEFS.yc}</div>
         <div class="val ${ycColor(ycV, isUS)}">${ycV != null ? sign(ycV)+ycV.toFixed(2)+'%' : '\u2014'}</div>
         <div class="sub">${isUS ? 'inversion = recession signal' : 'long-term rate'}</div>
         <div class="per">${ycL?.date ?? 'no data'} &middot; FRED</div>
       </div>
       <div class="metric-card">
         <div class="lbl">House prices</div>
+        <div class="def">${DEFS.hp}</div>
         <div class="val ${hpColor(hYoY)}">${hYoY != null ? sign(hYoY)+hYoY.toFixed(1)+'%' : fmt(hV,0)}</div>
         <div class="sub">${hYoY != null ? 'year-over-year change' : 'index level'}</div>
         <div class="per">${hL?.date ?? 'no data'} &middot; FRED / BIS</div>
       </div>
     </div>
-    <div class="chart-card">
-      <div class="clabel">Credit-to-GDP gap <span>pp above trend &middot; last 10 quarters</span></div>
-      <div style="position:relative;height:120px"><canvas id="cg-c" role="img" aria-label="Credit gap history for ${c.name}"></canvas></div>
-    </div>
-    <div class="two-col">
+
+    <div class="chart-grid">
       <div class="chart-card">
-        <div class="clabel">Debt service ratio <span>% of income</span></div>
-        <div style="position:relative;height:100px"><canvas id="dsr-c" role="img" aria-label="DSR history"></canvas></div>
+        <div class="clabel">Credit-to-GDP gap</div>
+        <div class="cdef">pp above/below long-run trend &middot; dashed lines = alert thresholds</div>
+        <div style="position:relative;height:160px"><canvas id="cg-c" role="img" aria-label="Credit gap history"></canvas></div>
       </div>
       <div class="chart-card">
-        <div class="clabel">${c.ycLabel} <span>%</span></div>
-        <div style="position:relative;height:100px"><canvas id="yc-c" role="img" aria-label="Yield curve history"></canvas></div>
+        <div class="clabel">Debt service ratio</div>
+        <div class="cdef">% of private sector income</div>
+        <div style="position:relative;height:160px"><canvas id="dsr-c" role="img" aria-label="DSR history"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="clabel">${c.ycLabel}</div>
+        <div class="cdef">${isUS ? '10yr minus 2yr yield, %' : '10yr government bond yield, %'}</div>
+        <div style="position:relative;height:160px"><canvas id="yc-c" role="img" aria-label="Yield curve history"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="clabel">House prices</div>
+        <div class="cdef">Real residential property price index</div>
+        <div style="position:relative;height:160px"><canvas id="hp-c" role="img" aria-label="House price history"></canvas></div>
       </div>
     </div>
   `;
 
   requestAnimationFrame(() => {
-    spark('cg-c',  tail(d.creditGap),  '#2a78d6');
-    spark('dsr-c', tail(d.dsr),        '#eda100');
-    spark('yc-c',  tail(d.yieldCurve), '#1baf7a');
+    makeChart('cg-c', d.creditGap, '#2a78d6', [
+      { value:  10, color: '#d03b3b', label: '+10pp' },
+      { value:   2, color: '#c98500', label: '+2pp'  },
+      { value:  -2, color: '#c98500', label: '-2pp'  },
+      { value:  -6, color: '#d03b3b', label: '-6pp'  },
+    ]);
+    makeChart('dsr-c', d.dsr, '#eda100', [
+      { value: 25, color: '#d03b3b', label: '25%' },
+      { value: 18, color: '#c98500', label: '18%' },
+    ]);
+    makeChart('yc-c', d.yieldCurve, '#1baf7a', isUS ? [
+      { value:  0, color: '#c98500', label: '0%' },
+      { value: -0.5, color: '#d03b3b', label: '-0.5%' },
+    ] : []);
+    makeChart('hp-c', d.housing, '#8b5cf6', [
+      { value: 0, color: '#898781', label: '' },
+    ]);
   });
 }
 
@@ -297,7 +377,6 @@ async function loadAll() {
   document.getElementById('alerts').innerHTML = '';
   ['bis','fred'].forEach(s => { document.getElementById(`dot-${s}`).className='dot pending'; });
 
-  // Load FRED data.json and BIS in parallel
   const [fredResult] = await Promise.all([loadFredData()]);
 
   let bisOk = false;
@@ -308,18 +387,17 @@ async function loadAll() {
   }));
 
   const fredOk = Object.keys(fredData).length > 0;
-  setStatus('bis',  bisOk,  bisOk  ? 'BIS \u2014 connected'  : 'BIS \u2014 no data');
+  setStatus('bis',  bisOk,  bisOk  ? 'BIS \u2014 connected' : 'BIS \u2014 no data');
   setStatus('fred', fredOk,
-    fredOk
-      ? `FRED \u2014 updated ${fredResult.updated ? new Date(fredResult.updated).toLocaleDateString() : 'recently'}`
-      : 'FRED \u2014 data.json not found (run workflow first)'
-  );
+    fredOk ? `FRED \u2014 updated ${fredResult.updated ? new Date(fredResult.updated).toLocaleDateString() : 'recently'}`
+           : 'FRED \u2014 data.json not found');
   document.getElementById('lbl-time').textContent = 'Loaded ' + new Date().toLocaleTimeString();
 
   renderCountry(active);
   btn.disabled = false; btn.textContent = '\u21ba Refresh';
 }
 
+// Build tabs sorted by GDP size
 const tabsEl = document.getElementById('tabs');
 COUNTRIES.forEach(c => {
   const b = document.createElement('button');
@@ -330,12 +408,19 @@ COUNTRIES.forEach(c => {
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     b.classList.add('active');
     if (cache[c.code]) renderCountry(c.code);
-    else { document.getElementById('content').innerHTML = '<div class="msg">Loading\u2026</div>'; loadCountry(c.code).then(() => renderCountry(c.code)); }
+    else {
+      document.getElementById('content').innerHTML = '<div class="msg">Loading\u2026</div>';
+      loadCountry(c.code).then(() => renderCountry(c.code));
+    }
   };
   tabsEl.appendChild(b);
 });
 
-loadAll();
+// Load Chart.js annotation plugin
+const script = document.createElement('script');
+script.src = 'https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-annotation/3.0.1/chartjs-plugin-annotation.min.js';
+script.onload = () => loadAll();
+document.head.appendChild(script);
 </script>
 </body>
 </html>
