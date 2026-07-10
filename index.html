@@ -299,13 +299,12 @@ function renderCountry(code) {
   if (hYoY != null && hYoY > 12) alerts.push({ level:'danger', msg:`House prices rising ${hYoY.toFixed(1)}% yr/yr — above high-risk threshold.` });
   else if (hYoY != null && hYoY > 7) alerts.push({ level:'warn', msg:`House prices rising ${hYoY.toFixed(1)}% yr/yr — above caution threshold.` });
 
-  document.getElementById('country-header').textContent = c.name;
   document.getElementById('alerts').innerHTML = alerts.map(a =>
     `<div class="alert ${a.level}">\u25b3 ${a.msg}</div>`
   ).join('');
 
   document.getElementById('content').innerHTML = `
-    <div id="country-header" style="font-size:16px;font-weight:600;margin-bottom:1rem;color:var(--text)"></div>
+    <div style="font-size:16px;font-weight:600;margin-bottom:1rem;color:var(--text)">${c.name}</div>
     <div class="metric-grid">
       <div class="metric-card">
         <div class="lbl">Credit-to-GDP gap</div>
