@@ -15,7 +15,7 @@ SERIES = {
 }
 
 def fetch(series_id):
-   r = requests.get(BASE, params={
+    r = requests.get(BASE, params={
         "series_id": series_id,
         "api_key": FRED_KEY,
         "file_type": "json",
@@ -32,11 +32,8 @@ def fetch(series_id):
 def fetch_us_yield_curve():
     dgs10 = fetch("DGS10")
     dgs2  = fetch("DGS2")
-    print(f"  DGS10: {len(dgs10)} obs, DGS2: {len(dgs2)} obs")
     dates = sorted(set(dgs10.keys()) & set(dgs2.keys()))
-    result = [{"date": d, "value": round(dgs10[d] - dgs2[d], 2)} for d in dates]
-    print(f"  Spread computed: {len(result)} obs, last: {result[-1]}")
-    return result
+    return [{"date": d, "value": round(dgs10[d] - dgs2[d], 2)} for d in dates]
 
 def fetch_series(series_id):
     raw = fetch(series_id)
