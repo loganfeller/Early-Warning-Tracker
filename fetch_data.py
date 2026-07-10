@@ -5,7 +5,7 @@ FRED_KEY = "67122fb3c41446ce24860a51a2416d35"
 BASE = "https://api.stlouisfed.org/fred/series/observations"
 
 SERIES = {
-    "US":  {"yc": "T10Y2Y",          "hp": "QUSN628BIS"},
+    "US":  {"yc": "T10Y3M",          "hp": "QUSN628BIS"},
     "CA":  {"yc": "IRLTLT01CAM156N", "hp": "QCAN628BIS"},
     "JP":  {"yc": "IRLTLT01JPM156N", "hp": "QJPN628BIS"},
     "DE":  {"yc": "IRLTLT01DEM156N", "hp": "QDER628BIS"},
