@@ -395,16 +395,14 @@ async function loadAll() {
   document.getElementById('alerts').innerHTML = '';
   ['bis','fred'].forEach(s => { document.getElementById(`dot-${s}`).className='dot pending'; });
 
-  const [fredResult] = await Promise.all([loadFredData()]);
-
-  let bisOk = false;
-  await Promise.all(COUNTRIES.map(async c => {
-    await loadCountry(c.code);
-    const d = cache[c.code];
-    if (d.creditGap?.length || d.dsr?.length) bisOk = true;
-  }));
-
+  // Load FRED data and active country only — others load on tab click
+  const fredResult = await loadFredData();
   const fredOk = Object.keys(fredData).length > 0;
+
+  await loadCountry(active);
+  const d = cache[active];
+  const bisOk = d.creditGap?.length > 0 || d.dsr?.length > 0;
+
   setStatus('bis',  bisOk,  bisOk  ? 'BIS \u2014 connected' : 'BIS \u2014 no data');
   setStatus('fred', fredOk,
     fredOk ? `FRED \u2014 updated ${fredResult.updated ? new Date(fredResult.updated).toLocaleDateString() : 'recently'}`
