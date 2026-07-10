@@ -102,13 +102,13 @@
 
 <script>
 const COUNTRIES = [
-  { code:'USA', name:'United States',  bis:'US', ycLabel:'10yr\u22122yr spread' },
-  { code:'JPN', name:'Japan',          bis:'JP', ycLabel:'10yr gov bond' },
-  { code:'DEU', name:'Germany',        bis:'DE', ycLabel:'10yr gov bond' },
-  { code:'GBR', name:'United Kingdom', bis:'GB', ycLabel:'10yr gov bond' },
-  { code:'FRA', name:'France',         bis:'FR', ycLabel:'10yr gov bond' },
-  { code:'ITA', name:'Italy',          bis:'IT', ycLabel:'10yr gov bond' },
-  { code:'CAN', name:'Canada',         bis:'CA', ycLabel:'10yr gov bond' },
+  { code:'US', name:'United States',  bis:'US', ycLabel:'10yr\u22122yr spread' },
+  { code:'JP', name:'Japan',          bis:'JP', ycLabel:'10yr gov bond' },
+  { code:'DE', name:'Germany',        bis:'DE', ycLabel:'10yr gov bond' },
+  { code:'GB', name:'United Kingdom', bis:'GB', ycLabel:'10yr gov bond' },
+  { code:'FR', name:'France',         bis:'FR', ycLabel:'10yr gov bond' },
+  { code:'IT', name:'Italy',          bis:'IT', ycLabel:'10yr gov bond' },
+  { code:'CA', name:'Canada',         bis:'CA', ycLabel:'10yr gov bond' },
 ];
 
 const DEFS = {
@@ -118,7 +118,7 @@ const DEFS = {
   hp: 'Year-over-year change in residential property prices.',
 };
 
-let active = 'USA';
+let active = 'US';
 let cache  = {};
 let charts = {};
 let fredData = {};
@@ -244,7 +244,7 @@ function renderCountry(code) {
   const d = cache[code];
   if (!d) return;
   const c    = COUNTRIES.find(x => x.code === code);
-  const isUS = code === 'USA';
+  const isUS = code === 'US';
   const cgL  = last(d.creditGap), dsrL = last(d.dsr), ycL = last(d.yieldCurve), hL = last(d.housing);
   const cgV  = cgL?.value  ?? null;
   const dsrV = dsrL?.value ?? null;
