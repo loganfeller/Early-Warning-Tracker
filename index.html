@@ -228,14 +228,15 @@ function makeChart(id, data, color, thresholds) {
   // Pre-compute year label for each data point.
   // Show year only for the first data point of each year,
   // works for both quarterly ("2005-Q1") and daily ("2005-01-03") formats.
+  // Space labels every 5 years to avoid crowding on long series.
   const seenYears = new Set();
   const tickLabels = labels.map(lbl => {
     if (!lbl) return '';
-    const year = lbl.substring(0, 4);
+    const year = parseInt(lbl.substring(0, 4));
     if (seenYears.has(year)) return '';
     const month = lbl.substring(5, 7);
     const isJanOrQ1 = (month === '01') || lbl.includes('Q1');
-    if (isJanOrQ1) { seenYears.add(year); return year; }
+    if (isJanOrQ1 && year % 5 === 0) { seenYears.add(year); return String(year); }
     return '';
   });
 
