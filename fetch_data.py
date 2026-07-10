@@ -15,9 +15,7 @@ SERIES = {
 }
 
 def fetch(series_id):
-    r = requests.get(BASE, params={...})
-    print(f"  URL: {r.url}")
-    r.raise_for_status()
+    r = requests.get(BASE, params={
         "series_id": series_id,
         "api_key": FRED_KEY,
         "file_type": "json",
@@ -39,4 +37,17 @@ for code, series in SERIES.items():
     try:
         yc = fetch(series["yc"])
     except Exception as e:
-        print(f"
+        print(f"  YC failed: {e}")
+        yc = []
+    try:
+        hp = fetch(series["hp"])
+    except Exception as e:
+        print(f"  HP failed: {e}")
+        hp = []
+    data["countries"][code] = {"yieldCurve": yc, "housing": hp}
+    print(f"  YC: {len(yc)} obs, HP: {len(hp)} obs")
+
+with open("data.json", "w") as f:
+    json.dump(data, f, indent=2)
+
+print("Wrote data.json")
