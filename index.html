@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Early Warning Indicators — G7</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-annotation/3.0.1/chartjs-plugin-annotation.min.js"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
@@ -29,15 +29,11 @@
   .btn { font-size: 12px; font-weight: 500; padding: 6px 14px; border-radius: var(--radius); border: 0.5px solid var(--border-strong); background: var(--surface); color: var(--text-2); cursor: pointer; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
   .btn:hover { background: var(--surface2); }
   .btn:disabled { opacity: 0.4; cursor: not-allowed; }
-
-  /* Tabs */
   .tabs { display: flex; gap: 4px; margin-bottom: 1.5rem; flex-wrap: wrap; }
   .tab { font-size: 12px; font-weight: 500; padding: 5px 13px; border-radius: var(--radius); border: 0.5px solid var(--border); background: none; color: var(--text-3); cursor: pointer; }
   .tab:hover { background: var(--surface); color: var(--text); }
   .tab.active { background: #dbeafe; border-color: #93c5fd; color: #1d4ed8; }
   @media (prefers-color-scheme: dark) { .tab.active { background: #1e3a5f; border-color: #2563eb; color: #93c5fd; } }
-
-  /* Alerts */
   .alerts { margin-bottom: 1.25rem; }
   .alert { border-radius: var(--radius); padding: 8px 12px; font-size: 12px; margin-bottom: 6px; display: flex; align-items: flex-start; gap: 7px; line-height: 1.4; }
   .alert.warn  { background: #fef9ec; border: 0.5px solid #fbbf24; color: #92400e; }
@@ -46,8 +42,6 @@
     .alert.warn  { background: #2d2000; border-color: #854d0e; color: #fde68a; }
     .alert.danger { background: #2d0a0a; border-color: #7f1d1d; color: #fca5a5; }
   }
-
-  /* Metric grid */
   .metric-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-bottom: 1rem; }
   .metric-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: 12px; padding: 16px 18px; }
   .metric-card .lbl { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-3); margin-bottom: 4px; }
@@ -58,20 +52,14 @@
   .metric-card .val.danger { color: var(--danger); }
   .metric-card .sub { font-size: 11px; color: var(--text-3); margin-top: 5px; }
   .metric-card .per { font-size: 10px; color: var(--text-3); margin-top: 10px; padding-top: 8px; border-top: 0.5px solid var(--border); }
-
-  /* Charts */
   .chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
   @media (max-width: 600px) { .chart-grid { grid-template-columns: 1fr; } }
   .chart-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: 12px; padding: 16px 18px; }
   .chart-card .clabel { font-size: 12px; font-weight: 500; color: var(--text-2); margin-bottom: 4px; }
   .chart-card .cdef { font-size: 11px; color: var(--text-3); margin-bottom: 10px; line-height: 1.4; }
-
-  /* Legend */
   .legend { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 1.25rem; font-size: 11px; color: var(--text-3); }
   .legend span { display: flex; align-items: center; gap: 5px; }
   .swatch { width: 22px; height: 3px; border-radius: 2px; display: inline-block; }
-
-  /* Status bar */
   .status-bar { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 1.5rem; padding-top: 1rem; border-top: 0.5px solid var(--border); font-size: 11px; color: var(--text-3); align-items: center; justify-content: space-between; }
   .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 4px; }
   .dot.ok { background: var(--ok); } .dot.err { background: var(--danger); } .dot.pending { background: var(--text-3); }
@@ -89,9 +77,7 @@
     </div>
     <button class="btn" id="rbtn" onclick="loadAll()">&#8635; Refresh</button>
   </div>
-
   <div class="tabs" id="tabs"></div>
-
   <div class="thresholds">
     <b>Alert thresholds (BIS research):</b>
     Credit-to-GDP gap &gt;2pp or &lt;-2pp = caution &middot; &gt;10pp or &lt;-6pp = high risk &middot;
@@ -99,19 +85,13 @@
     Yield curve &lt;0% = inversion signal &middot;
     House prices &gt;7% yr/yr = elevated
   </div>
-
   <div class="legend">
     <span><span class="swatch" style="background:var(--ok)"></span>within normal range</span>
     <span><span class="swatch" style="background:var(--warn)"></span>elevated — caution</span>
     <span><span class="swatch" style="background:var(--danger)"></span>above crisis threshold</span>
   </div>
-
   <div class="alerts" id="alerts"></div>
   <div id="content"><div class="msg">Fetching data&hellip;</div></div>
-
-  <div style="margin-top:1.5rem;padding-top:1rem;border-top:0.5px solid var(--border);font-size:11px;color:var(--text-3);">
-    Methodology and source files: <a href="https://github.com/loganfeller/Early-Warning-Tracker" target="_blank" style="color:var(--text-2);text-decoration:underline;">github.com/loganfeller/Early-Warning-Tracker</a>
-  </div>
   <div class="status-bar">
     <div style="display:flex;gap:1rem;flex-wrap:wrap">
       <div><span class="dot pending" id="dot-bis"></span><span id="lbl-bis">BIS &mdash; waiting</span></div>
@@ -122,15 +102,14 @@
 </div>
 
 <script>
-// G7 sorted by GDP size (2024 IMF estimates)
 const COUNTRIES = [
-  { code:'USA', name:'United States',  bis:'US', ycLabel:'10yr\u22122yr spread', ycUS: true },
-  { code:'JPN', name:'Japan',          bis:'JP', ycLabel:'10yr gov bond' },
-  { code:'DEU', name:'Germany',        bis:'DE', ycLabel:'10yr gov bond' },
-  { code:'GBR', name:'United Kingdom', bis:'GB', ycLabel:'10yr gov bond' },
-  { code:'FRA', name:'France',         bis:'FR', ycLabel:'10yr gov bond' },
-  { code:'ITA', name:'Italy',          bis:'IT', ycLabel:'10yr gov bond' },
-  { code:'CAN', name:'Canada',         bis:'CA', ycLabel:'10yr gov bond' },
+  { code:'US', name:'United States',  bis:'US', ycLabel:'10yr\u22122yr spread' },
+  { code:'JP', name:'Japan',          bis:'JP', ycLabel:'10yr gov bond' },
+  { code:'DE', name:'Germany',        bis:'DE', ycLabel:'10yr gov bond' },
+  { code:'GB', name:'United Kingdom', bis:'GB', ycLabel:'10yr gov bond' },
+  { code:'FR', name:'France',         bis:'FR', ycLabel:'10yr gov bond' },
+  { code:'IT', name:'Italy',          bis:'IT', ycLabel:'10yr gov bond' },
+  { code:'CA', name:'Canada',         bis:'CA', ycLabel:'10yr gov bond' },
 ];
 
 const DEFS = {
@@ -140,7 +119,7 @@ const DEFS = {
   hp: 'Year-over-year change in residential property prices.',
 };
 
-let active = 'USA';
+let active = 'US';
 let cache  = {};
 let charts = {};
 let fredData = {};
@@ -212,39 +191,26 @@ function makeChart(id, data, color, thresholds) {
   const isDark = matchMedia('(prefers-color-scheme: dark)').matches;
   const grid = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
 
-  // Build threshold annotation lines
   const annotations = {};
   if (thresholds) {
     thresholds.forEach((t, i) => {
       annotations['t'+i] = {
-        type: 'line',
-        yMin: t.value, yMax: t.value,
-        borderColor: t.color,
-        borderWidth: 1,
-        borderDash: [4, 3],
+        type: 'line', yMin: t.value, yMax: t.value,
+        borderColor: t.color, borderWidth: 1, borderDash: [4, 3],
         label: { content: t.label, display: true, position: 'end', font: { size: 9 }, color: t.color, backgroundColor: 'transparent', padding: 2 }
       };
     });
   }
 
   const labels = data.map(d => d.date);
-
-  // Pre-compute year label for each data point.
-  // For each year divisible by 5, label the FIRST data point that belongs to that year,
-  // regardless of whether it falls on Jan 1 or Q1 exactly.
-  // This handles daily FRED data (first trading day of year may be Jan 2-4)
-  // and quarterly data where format may be 2005-Q1 or 2005-01-01.
   const seenYears = new Set();
   const tickLabels = labels.map(lbl => {
     if (!lbl) return '';
     const year = parseInt(lbl.substring(0, 4));
     if (isNaN(year)) return '';
     if (seenYears.has(year)) return '';
-    // Mark first occurrence of each year divisible by 5
-    if (year % 5 === 0) { seenYears.add(year); return String(year); }
-    // Still need to register non-5 years so we don't double-label
     seenYears.add(year);
-    return '';
+    return year % 5 === 0 ? String(year) : '';
   });
 
   charts[id] = new Chart(el, {
@@ -263,11 +229,7 @@ function makeChart(id, data, color, thresholds) {
       scales: {
         x: {
           display: true,
-          ticks: {
-            font: { size: 9 }, color: '#898781', maxRotation: 0,
-            autoSkip: false,
-            callback: function(val, idx) { return tickLabels[idx] || ''; }
-          },
+          ticks: { font:{size:9}, color:'#898781', maxRotation:0, autoSkip:false, callback: function(val,idx){ return tickLabels[idx]||''; }},
           grid: { display: false }
         },
         y: { grid:{color:grid}, border:{display:false}, ticks:{ font:{size:10}, color:'#898781', maxTicksLimit:4, callback: v => v.toFixed(1) }}
@@ -280,7 +242,7 @@ function renderCountry(code) {
   const d = cache[code];
   if (!d) return;
   const c    = COUNTRIES.find(x => x.code === code);
-  const isUS = code === 'USA';
+  const isUS = code === 'US';
   const cgL  = last(d.creditGap), dsrL = last(d.dsr), ycL = last(d.yieldCurve), hL = last(d.housing);
   const cgV  = cgL?.value  ?? null;
   const dsrV = dsrL?.value ?? null;
@@ -292,20 +254,19 @@ function renderCountry(code) {
   const sign = v => v != null && v >= 0 ? '+' : '';
 
   const alerts = [];
-  if (cgV != null && cgV > 10)     alerts.push({ level:'danger', msg:`Credit-to-GDP gap of ${cgV.toFixed(1)}pp exceeds the BIS 10pp crisis threshold.` });
-  else if (cgV != null && cgV < -6) alerts.push({ level:'danger', msg:`Credit-to-GDP gap of ${cgV.toFixed(1)}pp is deeply negative, indicating significant credit contraction.` });
-  else if (cgV != null && (cgV > 2 || cgV < -2)) alerts.push({ level:'warn', msg:`Credit-to-GDP gap of ${cgV.toFixed(1)}pp is outside the normal ±2pp range.` });
+  if (cgV != null && cgV > 10)      alerts.push({ level:'danger', msg:`Credit-to-GDP gap of ${cgV.toFixed(1)}pp exceeds the BIS 10pp crisis threshold.` });
+  else if (cgV != null && cgV < -6) alerts.push({ level:'danger', msg:`Credit-to-GDP gap of ${cgV.toFixed(1)}pp is deeply negative.` });
+  else if (cgV != null && (cgV > 2 || cgV < -2)) alerts.push({ level:'warn', msg:`Credit-to-GDP gap of ${cgV.toFixed(1)}pp is outside the normal \u00b12pp range.` });
   if (isUS && ycV != null && ycV < -0.5) alerts.push({ level:'danger', msg:`Yield curve deeply inverted at ${ycV.toFixed(2)}%.` });
   else if (isUS && ycV != null && ycV < 0.1) alerts.push({ level:'warn', msg:`Yield curve flat or inverted at ${ycV.toFixed(2)}%.` });
-  if (hYoY != null && hYoY > 12) alerts.push({ level:'danger', msg:`House prices rising ${hYoY.toFixed(1)}% yr/yr — above high-risk threshold.` });
-  else if (hYoY != null && hYoY > 7) alerts.push({ level:'warn', msg:`House prices rising ${hYoY.toFixed(1)}% yr/yr — above caution threshold.` });
+  if (hYoY != null && hYoY > 12) alerts.push({ level:'danger', msg:`House prices rising ${hYoY.toFixed(1)}% yr/yr.` });
+  else if (hYoY != null && hYoY > 7) alerts.push({ level:'warn', msg:`House prices rising ${hYoY.toFixed(1)}% yr/yr.` });
 
   document.getElementById('alerts').innerHTML = alerts.map(a =>
     `<div class="alert ${a.level}">\u25b3 ${a.msg}</div>`
   ).join('');
 
   document.getElementById('content').innerHTML = `
-    <div style="font-size:16px;font-weight:600;margin-bottom:1rem;color:var(--text)">${c.name}</div>
     <div class="metric-grid">
       <div class="metric-card">
         <div class="lbl">Credit-to-GDP gap</div>
@@ -336,7 +297,6 @@ function renderCountry(code) {
         <div class="per">${hL?.date ?? 'no data'} &middot; FRED / BIS</div>
       </div>
     </div>
-
     <div class="chart-grid">
       <div class="chart-card">
         <div class="clabel">Credit-to-GDP gap</div>
@@ -355,7 +315,7 @@ function renderCountry(code) {
       </div>
       <div class="chart-card">
         <div class="clabel">House prices</div>
-        <div class="cdef">Year-over-year % change in real residential prices</div>
+        <div class="cdef">Real residential property price index</div>
         <div style="position:relative;height:160px"><canvas id="hp-c" role="img" aria-label="House price history"></canvas></div>
       </div>
     </div>
@@ -363,21 +323,21 @@ function renderCountry(code) {
 
   requestAnimationFrame(() => {
     makeChart('cg-c', d.creditGap, '#2a78d6', [
-      { value:  10, color: '#d03b3b', label: '+10pp' },
-      { value:   2, color: '#c98500', label: '+2pp'  },
-      { value:  -2, color: '#c98500', label: '-2pp'  },
-      { value:  -6, color: '#d03b3b', label: '-6pp'  },
+      { value: 10, color:'#d03b3b', label:'+10pp' },
+      { value:  2, color:'#c98500', label:'+2pp'  },
+      { value: -2, color:'#c98500', label:'-2pp'  },
+      { value: -6, color:'#d03b3b', label:'-6pp'  },
     ]);
     makeChart('dsr-c', d.dsr, '#eda100', [
-      { value: 25, color: '#d03b3b', label: '25%' },
-      { value: 18, color: '#c98500', label: '18%' },
+      { value: 25, color:'#d03b3b', label:'25%' },
+      { value: 18, color:'#c98500', label:'18%' },
     ]);
     makeChart('yc-c', d.yieldCurve, '#1baf7a', isUS ? [
-      { value:  0, color: '#c98500', label: '0%' },
-      { value: -0.5, color: '#d03b3b', label: '-0.5%' },
+      { value:  0,   color:'#c98500', label:'0%'    },
+      { value: -0.5, color:'#d03b3b', label:'-0.5%' },
     ] : []);
-    makeChart('hp-c', d.housing, '#8b5cf6', [
-      { value: 0, color: '#898781', label: '' },
+    makeChart('hp-c', d.housing.filter(x => x.date >= '2010-01-01'), '#8b5cf6', [
+      { value: 0, color:'#898781', label:'' },
     ]);
   });
 }
@@ -395,13 +355,15 @@ async function loadAll() {
   document.getElementById('alerts').innerHTML = '';
   ['bis','fred'].forEach(s => { document.getElementById(`dot-${s}`).className='dot pending'; });
 
-  // Load FRED data and active country only — others load on tab click
   const fredResult = await loadFredData();
   const fredOk = Object.keys(fredData).length > 0;
 
-  await loadCountry(active);
-  const d = cache[active];
-  const bisOk = d.creditGap?.length > 0 || d.dsr?.length > 0;
+  let bisOk = false;
+  await Promise.all(COUNTRIES.map(async c => {
+    await loadCountry(c.code);
+    const d = cache[c.code];
+    if (d.creditGap?.length || d.dsr?.length) bisOk = true;
+  }));
 
   setStatus('bis',  bisOk,  bisOk  ? 'BIS \u2014 connected' : 'BIS \u2014 no data');
   setStatus('fred', fredOk,
@@ -413,7 +375,6 @@ async function loadAll() {
   btn.disabled = false; btn.textContent = '\u21ba Refresh';
 }
 
-// Build tabs sorted by GDP size
 const tabsEl = document.getElementById('tabs');
 COUNTRIES.forEach(c => {
   const b = document.createElement('button');
