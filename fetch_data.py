@@ -15,7 +15,9 @@ SERIES = {
 }
 
 def fetch(series_id):
-    r = requests.get(BASE, params={
+    r = requests.get(BASE, params={...})
+    print(f"  URL: {r.url}")
+    r.raise_for_status()
         "series_id": series_id,
         "api_key": FRED_KEY,
         "file_type": "json",
