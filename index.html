@@ -108,6 +108,9 @@
   <div class="alerts" id="alerts"></div>
   <div id="content"><div class="msg">Fetching data&hellip;</div></div>
 
+  <div style="margin-top:1.5rem;padding-top:1rem;border-top:0.5px solid var(--border);font-size:11px;color:var(--text-3);">
+    Methodology and source files: <a href="https://github.com/loganfeller/Early-Warning-Tracker" target="_blank" style="color:var(--text-2);text-decoration:underline;">github.com/loganfeller/Early-Warning-Tracker</a>
+  </div>
   <div class="status-bar">
     <div style="display:flex;gap:1rem;flex-wrap:wrap">
       <div><span class="dot pending" id="dot-bis"></span><span id="lbl-bis">BIS &mdash; waiting</span></div>
@@ -120,13 +123,13 @@
 <script>
 // G7 sorted by GDP size (2024 IMF estimates)
 const COUNTRIES = [
-  { code:'US', name:'United States',  bis:'US', ycLabel:'10yr\u22122yr spread', ycUS: true },
-  { code:'JP', name:'Japan',          bis:'JP', ycLabel:'10yr gov bond' },
-  { code:'DE', name:'Germany',        bis:'DE', ycLabel:'10yr gov bond' },
-  { code:'GB', name:'United Kingdom', bis:'GB', ycLabel:'10yr gov bond' },
-  { code:'FR', name:'France',         bis:'FR', ycLabel:'10yr gov bond' },
-  { code:'IT', name:'Italy',          bis:'IT', ycLabel:'10yr gov bond' },
-  { code:'CA', name:'Canada',         bis:'CA', ycLabel:'10yr gov bond' },
+  { code:'USA', name:'United States',  bis:'US', ycLabel:'10yr\u22122yr spread', ycUS: true },
+  { code:'JPN', name:'Japan',          bis:'JP', ycLabel:'10yr gov bond' },
+  { code:'DEU', name:'Germany',        bis:'DE', ycLabel:'10yr gov bond' },
+  { code:'GBR', name:'United Kingdom', bis:'GB', ycLabel:'10yr gov bond' },
+  { code:'FRA', name:'France',         bis:'FR', ycLabel:'10yr gov bond' },
+  { code:'ITA', name:'Italy',          bis:'IT', ycLabel:'10yr gov bond' },
+  { code:'CAN', name:'Canada',         bis:'CA', ycLabel:'10yr gov bond' },
 ];
 
 const DEFS = {
@@ -136,7 +139,7 @@ const DEFS = {
   hp: 'Year-over-year change in residential property prices.',
 };
 
-let active = 'US';
+let active = 'USA';
 let cache  = {};
 let charts = {};
 let fredData = {};
@@ -276,7 +279,7 @@ function renderCountry(code) {
   const d = cache[code];
   if (!d) return;
   const c    = COUNTRIES.find(x => x.code === code);
-  const isUS = code === 'US';
+  const isUS = code === 'USA';
   const cgL  = last(d.creditGap), dsrL = last(d.dsr), ycL = last(d.yieldCurve), hL = last(d.housing);
   const cgV  = cgL?.value  ?? null;
   const dsrV = dsrL?.value ?? null;
@@ -296,11 +299,13 @@ function renderCountry(code) {
   if (hYoY != null && hYoY > 12) alerts.push({ level:'danger', msg:`House prices rising ${hYoY.toFixed(1)}% yr/yr — above high-risk threshold.` });
   else if (hYoY != null && hYoY > 7) alerts.push({ level:'warn', msg:`House prices rising ${hYoY.toFixed(1)}% yr/yr — above caution threshold.` });
 
+  document.getElementById('country-header').textContent = c.name;
   document.getElementById('alerts').innerHTML = alerts.map(a =>
     `<div class="alert ${a.level}">\u25b3 ${a.msg}</div>`
   ).join('');
 
   document.getElementById('content').innerHTML = `
+    <div id="country-header" style="font-size:16px;font-weight:600;margin-bottom:1rem;color:var(--text)"></div>
     <div class="metric-grid">
       <div class="metric-card">
         <div class="lbl">Credit-to-GDP gap</div>
@@ -350,7 +355,7 @@ function renderCountry(code) {
       </div>
       <div class="chart-card">
         <div class="clabel">House prices</div>
-        <div class="cdef">Real residential property price index</div>
+        <div class="cdef">Year-over-year % change in real residential prices</div>
         <div style="position:relative;height:160px"><canvas id="hp-c" role="img" aria-label="House price history"></canvas></div>
       </div>
     </div>
@@ -371,7 +376,7 @@ function renderCountry(code) {
       { value:  0, color: '#c98500', label: '0%' },
       { value: -0.5, color: '#d03b3b', label: '-0.5%' },
     ] : []);
-    makeChart('hp-c', d.housing.filter(x => x.date >= '2006-01-01'), '#8b5cf6', [
+    makeChart('hp-c', d.housing, '#8b5cf6', [
       { value: 0, color: '#898781', label: '' },
     ]);
   });
