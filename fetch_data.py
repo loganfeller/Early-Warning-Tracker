@@ -1,4 +1,4 @@
-import requests, json, os
+import requests, json
 from datetime import datetime
 
 FRED_KEY = "67122fb3c41446ce24860a51a2416d35"
@@ -14,22 +14,21 @@ SERIES = {
     "GB":  {"yc": "IRLTLT01GBM156N", "hp": "QGBR628BIS"},
 }
 
-def fetch(series_id, limit=5000):
-   r = requests.get(BASE, params={
+def fetch(series_id):
+    r = requests.get(BASE, params={
         "series_id": series_id,
         "api_key": FRED_KEY,
         "file_type": "json",
-        "limit": limit,
+        "limit": 5000,
         "sort_order": "asc",
         "observation_start": "1990-01-01",
-    })
     })
     r.raise_for_status()
     obs = r.json().get("observations", [])
     return [
         {"date": o["date"], "value": float(o["value"])}
         for o in obs if o["value"] != "."
-    ][::-1]  # reverse to chronological
+    ]
 
 data = {"updated": datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"), "countries": {}}
 
@@ -38,17 +37,4 @@ for code, series in SERIES.items():
     try:
         yc = fetch(series["yc"])
     except Exception as e:
-        print(f"  YC failed: {e}")
-        yc = []
-    try:
-        hp = fetch(series["hp"])
-    except Exception as e:
-        print(f"  HP failed: {e}")
-        hp = []
-    data["countries"][code] = {"yieldCurve": yc, "housing": hp}
-    print(f"  YC: {len(yc)} obs, HP: {len(hp)} obs")
-
-with open("data.json", "w") as f:
-    json.dump(data, f, indent=2)
-
-print("Wrote data.json")
+        print(f"
