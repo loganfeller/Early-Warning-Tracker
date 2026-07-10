@@ -15,12 +15,14 @@ SERIES = {
 }
 
 def fetch(series_id, limit=5000):
-    r = requests.get(BASE, params={
+   r = requests.get(BASE, params={
         "series_id": series_id,
         "api_key": FRED_KEY,
         "file_type": "json",
         "limit": limit,
-        "sort_order": "desc"
+        "sort_order": "asc",
+        "observation_start": "1990-01-01",
+    })
     })
     r.raise_for_status()
     obs = r.json().get("observations", [])
