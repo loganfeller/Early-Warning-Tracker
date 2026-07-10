@@ -212,7 +212,7 @@ function makeChart(id, data, color, thresholds) {
   const annotations = {};
   if (thresholds) {
     thresholds.forEach((t, i) => {
-      annotations[`t${i}`] = {
+      annotations['t'+i] = {
         type: 'line',
         yMin: t.value, yMax: t.value,
         borderColor: t.color,
@@ -223,8 +223,21 @@ function makeChart(id, data, color, thresholds) {
     });
   }
 
-  // Thin out x-axis labels to avoid crowding
   const labels = data.map(d => d.date);
+
+  // Pre-compute year label for each data point.
+  // Show year only for the first data point of each year,
+  // works for both quarterly ("2005-Q1") and daily ("2005-01-03") formats.
+  const seenYears = new Set();
+  const tickLabels = labels.map(lbl => {
+    if (!lbl) return '';
+    const year = lbl.substring(0, 4);
+    if (seenYears.has(year)) return '';
+    const month = lbl.substring(5, 7);
+    const isJanOrQ1 = (month === '01') || lbl.includes('Q1');
+    if (isJanOrQ1) { seenYears.add(year); return year; }
+    return '';
+  });
 
   charts[id] = new Chart(el, {
     type: 'line',
@@ -243,19 +256,9 @@ function makeChart(id, data, color, thresholds) {
         x: {
           display: true,
           ticks: {
-            font: { size: 9 }, color: '#898781', maxTicksLimit: 6, maxRotation: 0,
-            callback: function(val, idx) {
-              const lbl = this.getLabelForValue(val);
-              if (!lbl) return '';
-              // Quarterly format: 2005-Q1
-              if (lbl.includes('Q1')) return lbl.substring(0,4);
-              // Daily/monthly format: show year for January entries only
-              const parts = lbl.split('-');
-              if (parts.length >= 2 && parts[1] === '01') {
-                if (parts.length === 2 || parts[2] === '01') return parts[0];
-              }
-              return '';
-            }
+            font: { size: 9 }, color: '#898781', maxRotation: 0,
+            autoSkip: false,
+            callback: function(val, idx) { return tickLabels[idx] || ''; }
           },
           grid: { display: false }
         },
