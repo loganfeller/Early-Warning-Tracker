@@ -46,10 +46,10 @@ data = {"updated": datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"), "countries"
 for code, series in SERIES.items():
     print(f"Fetching {code}...")
     try:
+      try:
         if code == "US":
             yc = fetch_us_yield_curve()
-        else:
-            yc = fetch_series(series["yc"])
+            print(f"  YC first: {yc[0]}, last: {yc[-1]}")
     except Exception as e:
         print(f"  YC failed: {e}")
         yc = []
