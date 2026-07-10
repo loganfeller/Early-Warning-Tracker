@@ -1,34 +1,52 @@
-name: Fetch FRED Data
+import requests, json, os
+from datetime import datetime
 
-on:
-  schedule:
-    - cron: '0 6 * * *'   # runs daily at 6am UTC
-  workflow_dispatch:        # allows manual trigger from Actions tab
+FRED_KEY = os.environ.get("FRED_API_KEY", "")
+BASE = "https://api.stlouisfed.org/fred/series/observations"
 
-jobs:
-  fetch:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
+SERIES = {
+    "US":  {"yc": "T10Y2Y",          "hp": "QUSN628BIS"},
+    "CA":  {"yc": "IRLTLT01CAM156N", "hp": "QCAN628BIS"},
+    "JP":  {"yc": "IRLTLT01JPM156N", "hp": "QJPN628BIS"},
+    "DE":  {"yc": "IRLTLT01DEM156N", "hp": "QDER628BIS"},
+    "FR":  {"yc": "IRLTLT01FRM156N", "hp": "QFRR628BIS"},
+    "IT":  {"yc": "IRLTLT01ITM156N", "hp": "QITR628BIS"},
+    "GB":  {"yc": "IRLTLT01GBM156N", "hp": "QGBR628BIS"},
+}
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
+def fetch(series_id, limit=5000):
+    r = requests.get(BASE, params={
+        "series_id": series_id,
+        "api_key": FRED_KEY,
+        "file_type": "json",
+        "limit": limit,
+        "sort_order": "desc"
+    })
+    r.raise_for_status()
+    obs = r.json().get("observations", [])
+    return [
+        {"date": o["date"], "value": float(o["value"])}
+        for o in obs if o["value"] != "."
+    ][::-1]  # reverse to chronological
 
-      - name: Install dependencies
-        run: pip install requests
+data = {"updated": datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"), "countries": {}}
 
-      - name: Fetch FRED data
-        env:
-          FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
-        run: python fetch_data.py
+for code, series in SERIES.items():
+    print(f"Fetching {code}...")
+    try:
+        yc = fetch(series["yc"], limit=5000)
+    except Exception as e:
+        print(f"  YC failed: {e}")
+        yc = []
+    try:
+        hp = fetch(series["hp"], limit=300)
+    except Exception as e:
+        print(f"  HP failed: {e}")
+        hp = []
+    data["countries"][code] = {"yieldCurve": yc, "housing": hp}
+    print(f"  YC: {len(yc)} obs, HP: {len(hp)} obs")
 
-      - name: Commit and push data.json
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data.json
-          git diff --staged --quiet || git commit -m "Update FRED data $(date -u +%Y-%m-%d)"
-          git push
+with open("data.json", "w") as f:
+    json.dump(data, f, indent=2)
+
+print("Wrote data.json")
