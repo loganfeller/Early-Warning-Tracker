@@ -14,7 +14,7 @@ SERIES = {
     "GB":  {"yc": "IRLTLT01GBM156N", "hp": "QGBR628BIS"},
 }
 
-def fetch(series_id, limit=60):
+def fetch(series_id, limit=5000):
     r = requests.get(BASE, params={
         "series_id": series_id,
         "api_key": FRED_KEY,
