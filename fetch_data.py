@@ -31,11 +31,13 @@ def fetch(series_id):
     }
 
 def fetch_us_yield_curve():
-    # Calculate 10yr-2yr spread from underlying series which have no gaps
     dgs10 = fetch("DGS10")
     dgs2  = fetch("DGS2")
+    print(f"  DGS10: {len(dgs10)} obs, DGS2: {len(dgs2)} obs")
     dates = sorted(set(dgs10.keys()) & set(dgs2.keys()))
-    return [{"date": d, "value": round(dgs10[d] - dgs2[d], 2)} for d in dates]
+    result = [{"date": d, "value": round(dgs10[d] - dgs2[d], 2)} for d in dates]
+    print(f"  Spread computed: {len(result)} obs, last: {result[-1]}")
+    return result
 
 def fetch_series(series_id):
     raw = fetch(series_id)
@@ -46,10 +48,10 @@ data = {"updated": datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"), "countries"
 for code, series in SERIES.items():
     print(f"Fetching {code}...")
     try:
-      try:
         if code == "US":
             yc = fetch_us_yield_curve()
-            print(f"  YC first: {yc[0]}, last: {yc[-1]}")
+        else:
+            yc = fetch_series(series["yc"])
     except Exception as e:
         print(f"  YC failed: {e}")
         yc = []
