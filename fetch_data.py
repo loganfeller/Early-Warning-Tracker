@@ -5,7 +5,7 @@ FRED_KEY = "67122fb3c41446ce24860a51a2416d35"
 BASE = "https://api.stlouisfed.org/fred/series/observations"
 
 SERIES = {
-    "US":  {"yc": "T10Y3M",          "hp": "QUSN628BIS"},
+    "US":  {"yc": None,              "hp": "QUSN628BIS"},
     "CA":  {"yc": "IRLTLT01CAM156N", "hp": "QCAN628BIS"},
     "JP":  {"yc": "IRLTLT01JPM156N", "hp": "QJPN628BIS"},
     "DE":  {"yc": "IRLTLT01DEM156N", "hp": "QDER628BIS"},
@@ -25,22 +25,36 @@ def fetch(series_id):
     })
     r.raise_for_status()
     obs = r.json().get("observations", [])
-    return [
-        {"date": o["date"], "value": float(o["value"])}
+    return {
+        o["date"]: float(o["value"])
         for o in obs if o["value"] != "."
-    ]
+    }
+
+def fetch_us_yield_curve():
+    # Calculate 10yr-2yr spread from underlying series which have no gaps
+    dgs10 = fetch("DGS10")
+    dgs2  = fetch("DGS2")
+    dates = sorted(set(dgs10.keys()) & set(dgs2.keys()))
+    return [{"date": d, "value": round(dgs10[d] - dgs2[d], 2)} for d in dates]
+
+def fetch_series(series_id):
+    raw = fetch(series_id)
+    return [{"date": d, "value": v} for d, v in sorted(raw.items())]
 
 data = {"updated": datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"), "countries": {}}
 
 for code, series in SERIES.items():
     print(f"Fetching {code}...")
     try:
-        yc = fetch(series["yc"])
+        if code == "US":
+            yc = fetch_us_yield_curve()
+        else:
+            yc = fetch_series(series["yc"])
     except Exception as e:
         print(f"  YC failed: {e}")
         yc = []
     try:
-        hp = fetch(series["hp"])
+        hp = fetch_series(series["hp"])
     except Exception as e:
         print(f"  HP failed: {e}")
         hp = []
