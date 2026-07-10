@@ -371,7 +371,7 @@ function renderCountry(code) {
       { value:  0, color: '#c98500', label: '0%' },
       { value: -0.5, color: '#d03b3b', label: '-0.5%' },
     ] : []);
-    makeChart('hp-c', d.housing, '#8b5cf6', [
+    makeChart('hp-c', d.housing.filter(x => x.date >= '2006-01-01'), '#8b5cf6', [
       { value: 0, color: '#898781', label: '' },
     ]);
   });
